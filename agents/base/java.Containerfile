@@ -1,19 +1,6 @@
-FROM registry.fedoraproject.org/fedora:43
+FROM agent-runtime-base:fedora43
 
-# Install base dependencies (no JDKs here; Java via SDKMAN)
-RUN dnf install npm git \
-    curl wget gnupg jq  ca-certificates  \
-    vim nano make \
-    zip unzip procps ripgrep tree ImageMagick -y && \
-    dnf clean all
-
-# Store globally installed packages in /root/.npm-global
-ENV NPM_CONFIG_PREFIX=/root/.npm-global
-ENV PATH=$NPM_CONFIG_PREFIX/bin:$PATH
-
-RUN mkdir -p /root/.npm-global /root/.config /root/.local
-
-# Install SDKMAN and multiple Java versions (17, 21, 25) plus Maven and Gradle
+# Install SDKMAN and multiple Java versions (17, 21, 25) plus Maven and Gradle.
 ENV SDKMAN_DIR=/root/.sdkman
 ENV PATH=$SDKMAN_DIR/candidates/java/current/bin:$SDKMAN_DIR/candidates/maven/current/bin:$SDKMAN_DIR/candidates/gradle/current/bin:$PATH
 
@@ -25,9 +12,3 @@ RUN bash -lc "source $SDKMAN_DIR/bin/sdkman-init.sh && sdk install gradle"
 RUN bash -lc "source $SDKMAN_DIR/bin/sdkman-init.sh && sdk install java 21.0.10-tem"
 RUN bash -lc "source $SDKMAN_DIR/bin/sdkman-init.sh && sdk install java 25.0.2-tem"
 RUN bash -lc "source $SDKMAN_DIR/bin/sdkman-init.sh && sdk default java 25.0.2-tem"
-
-RUN npm install -g opencode-ai \
-  && echo "Installed Open Code version: $(opencode --version)"
-
-WORKDIR /app
-CMD ["opencode"]

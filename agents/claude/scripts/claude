@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+CONTAINER_IMAGE="${CONTAINER_IMAGE:-claude-code-container}"
+CONTAINER_NAME="claude-$(basename "$(pwd)")-$(date +%Y%m%d%H%M%S)"
+
+DOCKER_RUN_ARGS=()
+CLAUDE_ARGS=("$@")
+
+if [[ "$#" -gt 0 ]]; then
+  CLAUDE_ARGS=()
+  parsing_docker_args=true
+
+  for arg in "$@"; do
+    if [[ "$arg" == "--" && "$parsing_docker_args" == true ]]; then
+      parsing_docker_args=false
+      continue
+    fi
+
+    if [[ "$parsing_docker_args" == true ]]; then
+      DOCKER_RUN_ARGS+=("$arg")
+    else
+      CLAUDE_ARGS+=("$arg")
+    fi
+  done
+
+  if [[ "$parsing_docker_args" == true ]]; then
+    CLAUDE_ARGS=("$@")
+    DOCKER_RUN_ARGS=()
+  fi
+fi
+
+mkdir -p "$HOME/.claude" "$HOME/.config/claude"
+touch "$HOME/.claude.json"
+
+exec docker run --rm --tty --interactive \
+  --name "$CONTAINER_NAME" \
+  --add-host=host.docker.internal:host-gateway \
+  -v "$HOME/.claude:/root/.claude:Z" \
+  -v "$HOME/.claude.json:/root/.claude.json:Z" \
+  -v "$HOME/.config/claude:/root/.config/claude:Z" \
+  -v "$(pwd):/app:Z" \
+  "${DOCKER_RUN_ARGS[@]}" \
+  "$CONTAINER_IMAGE" \
+  claude "${CLAUDE_ARGS[@]}"

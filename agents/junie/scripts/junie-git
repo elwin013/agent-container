@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+CONTAINER_IMAGE="${CONTAINER_IMAGE:-junie-container}"
+CONTAINER_NAME="junie-$(basename "$(pwd)")-$(date +%Y%m%d%H%M%S)"
+
+DOCKER_RUN_ARGS=()
+JUNIE_ARGS=("$@")
+
+if [[ "$#" -gt 0 ]]; then
+  JUNIE_ARGS=()
+  parsing_docker_args=true
+
+  for arg in "$@"; do
+    if [[ "$arg" == "--" && "$parsing_docker_args" == true ]]; then
+      parsing_docker_args=false
+      continue
+    fi
+
+    if [[ "$parsing_docker_args" == true ]]; then
+      DOCKER_RUN_ARGS+=("$arg")
+    else
+      JUNIE_ARGS+=("$arg")
+    fi
+  done
+
+  if [[ "$parsing_docker_args" == true ]]; then
+    JUNIE_ARGS=("$@")
+    DOCKER_RUN_ARGS=()
+  fi
+fi
+
+mkdir -p "$HOME/.junie" "$HOME/.config/junie"
+touch "$HOME/.junie.json"
+
+GIT_CONFIG_HOST="${HOME}/.config/junie/gitconfig"
+mkdir -p "$(dirname "${GIT_CONFIG_HOST}")"
+touch "${GIT_CONFIG_HOST}"
+
+JUNIE_GIT_NAME="${JUNIE_GIT_NAME:-Junie Agent}"
+JUNIE_GIT_EMAIL="${JUNIE_GIT_EMAIL:-junie@localhost}"
+
+exec docker run --rm --tty --interactive \
+  --name "$CONTAINER_NAME" \
+  --add-host=host.docker.internal:host-gateway \
+  -v "$HOME/.junie:/root/.junie:Z" \
+  -v "$HOME/.junie.json:/root/.junie.json:Z" \
+  -v "$HOME/.config/junie:/root/.config/junie:Z" \
+  -e GIT_CONFIG_GLOBAL=/root/.config/junie/gitconfig \
+  -e JUNIE_GIT_NAME="$JUNIE_GIT_NAME" \
+  -e JUNIE_GIT_EMAIL="$JUNIE_GIT_EMAIL" \
+  -v "$(pwd):/app:Z" \
+  "${DOCKER_RUN_ARGS[@]}" \
+  "$CONTAINER_IMAGE" \
+  bash -lc 'git config --global user.name "$JUNIE_GIT_NAME"; git config --global user.email "$JUNIE_GIT_EMAIL"; git config --global --replace-all safe.directory /app; git config --global commit.gpgsign false; git config --global tag.gpgsign false; exec junie "$@"' -- "${JUNIE_ARGS[@]}"

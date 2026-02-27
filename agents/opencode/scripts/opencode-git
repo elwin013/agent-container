@@ -33,13 +33,10 @@ fi
 
 mkdir -p "$HOME/.local/state/opencode" "$HOME/.local/share/opencode" "$HOME/.config/opencode"
 
-# Git config used inside the container. We keep it under the same opencode
-# config directory that is already mounted into the container.
 GIT_CONFIG_HOST="${HOME}/.config/opencode/gitconfig"
 mkdir -p "$(dirname "${GIT_CONFIG_HOST}")"
 touch "${GIT_CONFIG_HOST}"
 
-# Defaults can be overridden per-user.
 OPENCODE_GIT_NAME="${OPENCODE_GIT_NAME:-OpenCode Agent}"
 OPENCODE_GIT_EMAIL="${OPENCODE_GIT_EMAIL:-opencode@localhost}"
 

@@ -1,128 +1,219 @@
-# opencode-container
+# agent-container
 
+Run coding agents in containers against your current directory so they cannot access your full host file system.
 
-Run `opencode` inside a container against your current directory — to prevent it from accessing your full file system.
-
-Using Fedora 43 as the base container.
+Images use Fedora 43 as the base.
 
 ## Requirements
 
-- Docker / Podman
+- Docker or Podman
 - `make`
 
-## Install
+## Repository structure
 
-For the standard container:
+- `agents/opencode`: OpenCode image definitions and notes
+- `agents/opencode/scripts`: OpenCode wrappers
+- `agents/claude`: Claude image definitions and notes
+- `agents/claude/scripts`: Claude wrappers
+- `agents/junie`: Junie image definitions and notes
+- `agents/junie/scripts`: Junie wrappers
+- `agents/base`: shared base images reused by all agents
+- `mk`: Make target modules
+
+## Architecture
+
+This repository organizes agent container support by capability and agent name.
+
+- `agents/<agent>` stores image definitions and notes for each agent variant.
+- `agents/base` stores shared runtime base images.
+- `agents/<agent>/scripts` stores standalone wrapper scripts copied to `~/.local/bin`.
+- `mk` stores reusable make target modules for build/install flows.
+
+To add a new agent:
+
+1. Add `agents/<agent>/base.Containerfile` and `agents/<agent>/java.Containerfile`.
+2. Add standalone wrappers under `agents/<agent>/scripts/`.
+3. Add `build-*`, `addbin-*`, and `removebin-*` targets.
+4. Add `agents/<agent>/README.md` and update `README.md`.
+
+Build flow:
+
+- `build-base` builds `agent-runtime-base:fedora43` from `agents/base/common.Containerfile`.
+- `build-base-java` builds `agent-runtime-base-java:fedora43` from `agents/base/java.Containerfile`.
+- Agent build targets depend on one of these base images.
+
+## Build and install wrappers
+
+OpenCode:
 
 ```sh
-make build
+make build-opencode
+make build-opencode-java
 ```
 
-For the container with Java tools pre-installed:
+Claude Code:
 
 ```sh
-make build-java
+make build-claude
+make build-claude-java
 ```
 
-This will:
+Junie:
 
-- Build the `opencode-container` or `opencode-container-java` image (see `Containerfile` / `Containerfile-java`)
-- Install small wrapper scripts to `~/.local/bin/`:
+```sh
+make build-junie
+make build-junie-java
+```
+
+Build everything in one command:
+
+```sh
+make build-all
+```
+
+Backward-compatible aliases:
+
+- `make build` -> `make build-opencode`
+- `make build-java` -> `make build-opencode-java`
+
+Base images are built first automatically:
+
+- `make build-base`
+- `make build-base-java`
+
+## Installed wrapper scripts
+
+Wrapper sources live in each agent directory under `agents/*/scripts/`. Build targets copy wrappers into `~/.local/bin`.
+
+OpenCode wrappers:
 
 - `~/.local/bin/opencode`
 - `~/.local/bin/opencode-auth`
 - `~/.local/bin/opencode-git`
-- `~/.local/bin/opencode-java` (if `make build-java` was used)
-- `~/.local/bin/opencode-java-git` (if `make build-java` was used)
+- `~/.local/bin/opencode-java`
+- `~/.local/bin/opencode-java-git`
 
-Wrapper sources live in `scripts/`.
+Claude wrappers:
+
+- `~/.local/bin/claude`
+- `~/.local/bin/claude-git`
+- `~/.local/bin/claude-java`
+- `~/.local/bin/claude-java-git`
+
+Junie wrappers:
+
+- `~/.local/bin/junie`
+- `~/.local/bin/junie-auth`
+- `~/.local/bin/junie-git`
+- `~/.local/bin/junie-java`
+- `~/.local/bin/junie-java-git`
 
 Make sure `~/.local/bin` is on your `PATH`.
 
-## Use
+## Usage
 
-Run in the project folder:
+Run from your project directory.
+
+OpenCode:
 
 ```sh
 opencode
-```
-
-`opencode` does not expose the auth callback port, so you can run multiple containers in parallel.
-
-When you need to authenticate/login, use:
-
-```sh
 opencode-auth
-```
-
-`opencode-auth` exists only to expose `127.0.0.1:1455` for the callback flow.
-
-Or for Java projects:
-
-```sh
-opencode-java
-```
-
-Pass OpenCode arguments normally:
-
-```sh
-opencode -s session-id
-```
-
-
-If you want the container to have a dedicated git identity/config so the agent can create intermediate commits:
-
-```sh
 opencode-git
-```
-
-Or for Java projects with git identity:
-
-```sh
+opencode-java
 opencode-java-git
 ```
 
-To pass extra container runtime flags, use `--` to separate container flags from OpenCode flags:
+Claude Code:
+
+```sh
+claude
+claude-git
+claude-java
+claude-java-git
+```
+
+Junie:
+
+```sh
+junie
+junie-auth
+junie-git
+junie-java
+junie-java-git
+```
+
+To pass extra container runtime flags, use `--` to separate container flags from agent flags:
 
 ```sh
 opencode --network host -e FOO=bar -- -s session-id
-opencode-git --cpus 2 -- --help
+claude --cpus 2 -- --help
+junie -e BAR=baz -- --help
 ```
 
-Without `--`, all arguments are forwarded to OpenCode.
+Without `--`, all arguments are forwarded to the agent CLI.
 
+## Git-enabled wrappers
 
-Default git credentials for the agent:
+`*-git` wrappers set git identity inside the container, set `/app` as `safe.directory`, and disable GPG signing for commits and tags.
 
-- `OPENCODE_GIT_NAME="OpenCode Agent"`
-- `OPENCODE_GIT_EMAIL="opencode@localhost"`
+Defaults:
 
+- OpenCode: `OPENCODE_GIT_NAME="OpenCode Agent"`, `OPENCODE_GIT_EMAIL="opencode@localhost"`
+- Claude: `CLAUDE_GIT_NAME="Claude Code Agent"`, `CLAUDE_GIT_EMAIL="claude@localhost"`
+- Junie: `JUNIE_GIT_NAME="Junie Agent"`, `JUNIE_GIT_EMAIL="junie@localhost"`
 
-What the wrapper does:
+Git config is persisted on the host:
 
-- Mounts the current directory at `/app`
-- Persists OpenCode state/config from (ref: [anomalyco/opencode#4170](https://github.com/anomalyco/opencode/issues/4170)):
-  - `~/.local/state/opencode`
-  - `~/.local/share/opencode`
-  - `~/.config/opencode`
+- OpenCode: `~/.config/opencode/gitconfig`
+- Claude: `~/.config/claude/gitconfig`
+- Junie: `~/.config/junie/gitconfig`
 
+## Mounted state/config directories
 
-`opencode-auth` additionally exposes `127.0.0.1:1455` (login callback).
+OpenCode wrappers mount:
 
+- `$(pwd)` -> `/app`
+- `~/.local/state/opencode` -> `/root/.local/state/opencode`
+- `~/.local/share/opencode` -> `/root/.local/share/opencode`
+- `~/.config/opencode` -> `/root/.config/opencode`
+- `opencode-auth` additionally exposes `127.0.0.1:1455:1455`
 
-`opencode-git` additionally sets a git identity *inside the container* and marks `/app` as a safe directory.
+Claude wrappers mount:
 
+- `$(pwd)` -> `/app`
+- `~/.claude` -> `/root/.claude`
+- `~/.claude.json` -> `/root/.claude.json`
+- `~/.config/claude` -> `/root/.config/claude`
 
-It does this by using a dedicated git config file on the host at `~/.config/opencode/gitconfig` (already mounted into the container) and setting:
+Junie wrappers mount:
 
-- `GIT_CONFIG_GLOBAL=/root/.config/opencode/gitconfig`
+- `$(pwd)` -> `/app`
+- `~/.junie` -> `/root/.junie`
+- `~/.junie.json` -> `/root/.junie.json`
+- `~/.config/junie` -> `/root/.config/junie`
+- `junie-auth` additionally exposes `127.0.0.1:62345:62345`
 
+## Junie status
 
-The wrapper creates the file if it doesn't exist, so the git config is persisted across runs via the mounted `~/.config/opencode` folder.
+Junie images install `@jetbrains/junie-cli` globally via npm.
 
 ## Remove
 
+Remove local wrapper scripts:
+
 ```sh
 make removebin
-docker rmi opencode-container opencode-container-java
+```
+
+Remove images:
+
+```sh
+docker rmi \
+  opencode-container \
+  opencode-container-java \
+  claude-code-container \
+  claude-code-container-java \
+  junie-container \
+  junie-container-java
 ```

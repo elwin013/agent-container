@@ -1,0 +1,12 @@
+# VCS metadata
+.git
+.git/**
+
+# Repository docs and metadata
+README.md
+LICENSE
+agents/*/README.md
+
+# Local build helpers and wrappers not needed in image build context
+mk/
+agents/*/scripts/

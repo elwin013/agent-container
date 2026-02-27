@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export CONTAINER_IMAGE="${CONTAINER_IMAGE:-junie-container-java}"
+
+exec "$(dirname "$0")/junie" "$@"

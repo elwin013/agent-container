@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+CONTAINER_IMAGE="${CONTAINER_IMAGE:-claude-code-container}"
+CONTAINER_NAME="claude-$(basename "$(pwd)")-$(date +%Y%m%d%H%M%S)"
+
+DOCKER_RUN_ARGS=()
+CLAUDE_ARGS=("$@")
+
+if [[ "$#" -gt 0 ]]; then
+  CLAUDE_ARGS=()
+  parsing_docker_args=true
+
+  for arg in "$@"; do
+    if [[ "$arg" == "--" && "$parsing_docker_args" == true ]]; then
+      parsing_docker_args=false
+      continue
+    fi
+
+    if [[ "$parsing_docker_args" == true ]]; then
+      DOCKER_RUN_ARGS+=("$arg")
+    else
+      CLAUDE_ARGS+=("$arg")
+    fi
+  done
+
+  if [[ "$parsing_docker_args" == true ]]; then
+    CLAUDE_ARGS=("$@")
+    DOCKER_RUN_ARGS=()
+  fi
+fi
+
+mkdir -p "$HOME/.claude" "$HOME/.config/claude"
+touch "$HOME/.claude.json"
+
+GIT_CONFIG_HOST="${HOME}/.config/claude/gitconfig"
+mkdir -p "$(dirname "${GIT_CONFIG_HOST}")"
+touch "${GIT_CONFIG_HOST}"
+
+CLAUDE_GIT_NAME="${CLAUDE_GIT_NAME:-Claude Code Agent}"
+CLAUDE_GIT_EMAIL="${CLAUDE_GIT_EMAIL:-claude@localhost}"
+
+exec docker run --rm --tty --interactive \
+  --name "$CONTAINER_NAME" \
+  --add-host=host.docker.internal:host-gateway \
+  -v "$HOME/.claude:/root/.claude:Z" \
+  -v "$HOME/.claude.json:/root/.claude.json:Z" \
+  -v "$HOME/.config/claude:/root/.config/claude:Z" \
+  -e GIT_CONFIG_GLOBAL=/root/.config/claude/gitconfig \
+  -e CLAUDE_GIT_NAME="$CLAUDE_GIT_NAME" \
+  -e CLAUDE_GIT_EMAIL="$CLAUDE_GIT_EMAIL" \
+  -v "$(pwd):/app:Z" \
+  "${DOCKER_RUN_ARGS[@]}" \
+  "$CONTAINER_IMAGE" \
+  bash -lc 'git config --global user.name "$CLAUDE_GIT_NAME"; git config --global user.email "$CLAUDE_GIT_EMAIL"; git config --global --replace-all safe.directory /app; git config --global commit.gpgsign false; git config --global tag.gpgsign false; exec claude "$@"' -- "${CLAUDE_ARGS[@]}"
