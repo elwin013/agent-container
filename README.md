@@ -17,6 +17,8 @@ Images use Fedora 43 as the base.
 - `agents/claude/scripts`: Claude wrappers
 - `agents/junie`: Junie image definitions and notes
 - `agents/junie/scripts`: Junie wrappers
+- `agents/copilot`: GitHub Copilot CLI image definitions and notes
+- `agents/copilot/scripts`: GitHub Copilot CLI wrappers
 - `agents/base`: shared base images reused by all agents
 - `mk`: Make target modules
 
@@ -65,6 +67,13 @@ make build-junie
 make build-junie-java
 ```
 
+GitHub Copilot CLI:
+
+```sh
+make build-copilot
+make build-copilot-java
+```
+
 Build everything in one command:
 
 ```sh
@@ -107,6 +116,13 @@ Junie wrappers:
 - `~/.local/bin/junie-java`
 - `~/.local/bin/junie-java-git`
 
+GitHub Copilot CLI wrappers:
+
+- `~/.local/bin/copilot`
+- `~/.local/bin/copilot-git`
+- `~/.local/bin/copilot-java`
+- `~/.local/bin/copilot-java-git`
+
 Make sure `~/.local/bin` is on your `PATH`.
 
 ## Usage
@@ -141,6 +157,15 @@ junie-java
 junie-java-git
 ```
 
+GitHub Copilot CLI:
+
+```sh
+copilot
+copilot-git
+copilot-java
+copilot-java-git
+```
+
 To pass extra container runtime flags, use `--` to separate container flags from agent flags:
 
 ```sh
@@ -160,12 +185,14 @@ Defaults:
 - OpenCode: `OPENCODE_GIT_NAME="OpenCode Agent"`, `OPENCODE_GIT_EMAIL="opencode@localhost"`
 - Claude: `CLAUDE_GIT_NAME="Claude Code Agent"`, `CLAUDE_GIT_EMAIL="claude@localhost"`
 - Junie: `JUNIE_GIT_NAME="Junie Agent"`, `JUNIE_GIT_EMAIL="junie@localhost"`
+- Copilot: `COPILOT_GIT_NAME="GitHub Copilot Agent"`, `COPILOT_GIT_EMAIL="copilot@localhost"`
 
 Git config is persisted on the host:
 
 - OpenCode: `~/.config/opencode/gitconfig`
 - Claude: `~/.config/claude/gitconfig`
 - Junie: `~/.config/junie/gitconfig`
+- Copilot: `~/.config/copilot/gitconfig`
 
 ## Mounted state/config directories
 
@@ -189,6 +216,11 @@ Junie wrappers mount:
 - `$(pwd)` -> `/app`
 - `~/.junie` -> `/root/.junie`
 
+GitHub Copilot CLI wrappers mount:
+
+- `$(pwd)` -> `/app`
+- `~/.copilot` -> `/root/.copilot`
+
 Java wrappers additionally mount:
 
 - `~/.local/share/agent-container/m2` -> `/root/.m2`
@@ -196,6 +228,10 @@ Java wrappers additionally mount:
 ## Junie status
 
 Junie images install `@jetbrains/junie-cli` globally via npm.
+
+## GitHub Copilot CLI status
+
+GitHub Copilot CLI images install `@github/copilot` globally via npm.
 
 ## Remove
 
@@ -214,5 +250,7 @@ docker rmi \
   claude-code-container \
   claude-code-container-java \
   junie-container \
-  junie-container-java
+  junie-container-java \
+  copilot-container \
+  copilot-container-java
 ```

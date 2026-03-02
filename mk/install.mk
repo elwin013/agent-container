@@ -2,7 +2,8 @@
 	addbin-opencode addbin-opencode-auth addbin-opencode-git addbin-opencode-java addbin-opencode-java-git \
 	addbin-claude addbin-claude-git addbin-claude-java addbin-claude-java-git \
 	addbin-junie addbin-junie-git addbin-junie-java addbin-junie-java-git \
-	removebin removebin-opencode removebin-claude removebin-junie ensure-local-bin
+	addbin-copilot addbin-copilot-git addbin-copilot-java addbin-copilot-java-git \
+	removebin removebin-opencode removebin-claude removebin-junie removebin-copilot ensure-local-bin
 
 addbin: addbin-opencode
 
@@ -79,10 +80,30 @@ addbin-junie-java-git: ensure-local-bin
 	cp agents/junie/scripts/junie-java-git ~/.local/bin/junie-java-git
 	chmod +x ~/.local/bin/junie-java-git
 
+addbin-copilot: ensure-local-bin
+	echo "Adding copilot to ~/.local/bin/copilot"
+	cp agents/copilot/scripts/copilot ~/.local/bin/copilot
+	chmod +x ~/.local/bin/copilot
+
+addbin-copilot-git: ensure-local-bin
+	echo "Adding copilot-git to ~/.local/bin/copilot-git"
+	cp agents/copilot/scripts/copilot-git ~/.local/bin/copilot-git
+	chmod +x ~/.local/bin/copilot-git
+
+addbin-copilot-java: ensure-local-bin
+	echo "Adding copilot-java to ~/.local/bin/copilot-java"
+	cp agents/copilot/scripts/copilot-java ~/.local/bin/copilot-java
+	chmod +x ~/.local/bin/copilot-java
+
+addbin-copilot-java-git: ensure-local-bin
+	echo "Adding copilot-java-git to ~/.local/bin/copilot-java-git"
+	cp agents/copilot/scripts/copilot-java-git ~/.local/bin/copilot-java-git
+	chmod +x ~/.local/bin/copilot-java-git
+
 ensure-local-bin:
 	mkdir -p ~/.local/bin
 
-removebin: removebin-opencode removebin-claude removebin-junie
+removebin: removebin-opencode removebin-claude removebin-junie removebin-copilot
 
 removebin-opencode:
 	rm -f ~/.local/bin/opencode
@@ -102,3 +123,9 @@ removebin-junie:
 	rm -f ~/.local/bin/junie-git
 	rm -f ~/.local/bin/junie-java
 	rm -f ~/.local/bin/junie-java-git
+
+removebin-copilot:
+	rm -f ~/.local/bin/copilot
+	rm -f ~/.local/bin/copilot-git
+	rm -f ~/.local/bin/copilot-java
+	rm -f ~/.local/bin/copilot-java-git

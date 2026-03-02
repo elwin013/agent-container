@@ -1,8 +1,8 @@
-.PHONY: build build-all build-java build-base build-base-java build-opencode build-opencode-java build-claude build-claude-java build-junie build-junie-java
+.PHONY: build build-all build-java build-base build-base-java build-opencode build-opencode-java build-claude build-claude-java build-junie build-junie-java build-copilot build-copilot-java
 
 build: build-opencode
 
-build-all: build-opencode build-opencode-java build-claude build-claude-java build-junie build-junie-java
+build-all: build-opencode build-opencode-java build-claude build-claude-java build-junie build-junie-java build-copilot build-copilot-java
 
 build-java: build-opencode-java
 
@@ -35,3 +35,11 @@ build-junie: build-base
 build-junie-java: build-base-java
 	docker build -t junie-container-java -f agents/junie/java.Containerfile .
 	$(MAKE) addbin-junie addbin-junie-git addbin-junie-java addbin-junie-java-git
+
+build-copilot: build-base
+	docker build -t copilot-container -f agents/copilot/base.Containerfile .
+	$(MAKE) addbin-copilot addbin-copilot-git
+
+build-copilot-java: build-base-java
+	docker build -t copilot-container-java -f agents/copilot/java.Containerfile .
+	$(MAKE) addbin-copilot addbin-copilot-git addbin-copilot-java addbin-copilot-java-git

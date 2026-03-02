@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+CONTAINER_IMAGE="${CONTAINER_IMAGE:-copilot-container}"
+CONTAINER_NAME="copilot-$(basename "$(pwd)")-$(date +%Y%m%d%H%M%S)"
+
+DOCKER_RUN_ARGS=()
+COPILOT_ARGS=("$@")
+
+if [[ "$#" -gt 0 ]]; then
+  COPILOT_ARGS=()
+  parsing_docker_args=true
+
+  for arg in "$@"; do
+    if [[ "$arg" == "--" && "$parsing_docker_args" == true ]]; then
+      parsing_docker_args=false
+      continue
+    fi
+
+    if [[ "$parsing_docker_args" == true ]]; then
+      DOCKER_RUN_ARGS+=("$arg")
+    else
+      COPILOT_ARGS+=("$arg")
+    fi
+  done
+
+  if [[ "$parsing_docker_args" == true ]]; then
+    COPILOT_ARGS=("$@")
+    DOCKER_RUN_ARGS=()
+  fi
+fi
+
+M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
+
+mkdir -p "$HOME/.copilot" "$M2_CACHE_HOST"
+
+GIT_CONFIG_HOST="${HOME}/.config/copilot/gitconfig"
+mkdir -p "$(dirname "${GIT_CONFIG_HOST}")"
+touch "${GIT_CONFIG_HOST}"
+
+COPILOT_GIT_NAME="${COPILOT_GIT_NAME:-GitHub Copilot Agent}"
+COPILOT_GIT_EMAIL="${COPILOT_GIT_EMAIL:-copilot@localhost}"
+
+if [[ "$CONTAINER_IMAGE" == *-java ]]; then
+  DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:Z")
+fi
+
+exec docker run --rm --tty --interactive \
+  --name "$CONTAINER_NAME" \
+  --add-host=host.docker.internal:host-gateway \
+  -v "$HOME/.copilot:/root/.copilot:Z" \
+  -e GIT_CONFIG_GLOBAL=/root/.config/copilot/gitconfig \
+  -e COPILOT_GIT_NAME="$COPILOT_GIT_NAME" \
+  -e COPILOT_GIT_EMAIL="$COPILOT_GIT_EMAIL" \
+  -v "$(pwd):/app:Z" \
+  "${DOCKER_RUN_ARGS[@]}" \
+  "$CONTAINER_IMAGE" \
+  bash -lc 'git config --global user.name "$COPILOT_GIT_NAME"; git config --global user.email "$COPILOT_GIT_EMAIL"; git config --global --replace-all safe.directory /app; git config --global commit.gpgsign false; git config --global tag.gpgsign false; exec copilot "$@"' -- "${COPILOT_ARGS[@]}"
