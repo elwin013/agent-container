@@ -31,7 +31,9 @@ if [[ "$#" -gt 0 ]]; then
   fi
 fi
 
-mkdir -p "$HOME/.junie" "$HOME/.config/junie"
+M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
+
+mkdir -p "$HOME/.junie" "$HOME/.config/junie" "$M2_CACHE_HOST"
 touch "$HOME/.junie.json"
 
 GIT_CONFIG_HOST="${HOME}/.config/junie/gitconfig"
@@ -40,6 +42,10 @@ touch "${GIT_CONFIG_HOST}"
 
 JUNIE_GIT_NAME="${JUNIE_GIT_NAME:-Junie Agent}"
 JUNIE_GIT_EMAIL="${JUNIE_GIT_EMAIL:-junie@localhost}"
+
+if [[ "$CONTAINER_IMAGE" == *-java ]]; then
+  DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:Z")
+fi
 
 exec docker run --rm --tty --interactive \
   --name "$CONTAINER_NAME" \

@@ -194,6 +194,10 @@ Junie wrappers mount:
 - `~/.config/junie` -> `/root/.config/junie`
 - `junie-auth` additionally exposes `127.0.0.1:62345:62345`
 
+Java wrappers additionally mount:
+
+- `~/.local/share/agent-container/m2` -> `/root/.m2`
+
 ## Junie status
 
 Junie images install `@jetbrains/junie-cli` globally via npm.

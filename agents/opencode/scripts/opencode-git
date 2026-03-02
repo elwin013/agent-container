@@ -31,7 +31,9 @@ if [[ "$#" -gt 0 ]]; then
   fi
 fi
 
-mkdir -p "$HOME/.local/state/opencode" "$HOME/.local/share/opencode" "$HOME/.config/opencode"
+M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
+
+mkdir -p "$HOME/.local/state/opencode" "$HOME/.local/share/opencode" "$HOME/.config/opencode" "$M2_CACHE_HOST"
 
 GIT_CONFIG_HOST="${HOME}/.config/opencode/gitconfig"
 mkdir -p "$(dirname "${GIT_CONFIG_HOST}")"
@@ -39,6 +41,10 @@ touch "${GIT_CONFIG_HOST}"
 
 OPENCODE_GIT_NAME="${OPENCODE_GIT_NAME:-OpenCode Agent}"
 OPENCODE_GIT_EMAIL="${OPENCODE_GIT_EMAIL:-opencode@localhost}"
+
+if [[ "$CONTAINER_IMAGE" == *-java ]]; then
+  DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:Z")
+fi
 
 exec docker run --rm --tty --interactive \
   --name "$CONTAINER_NAME" \

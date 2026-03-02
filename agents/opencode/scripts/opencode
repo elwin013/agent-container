@@ -31,7 +31,13 @@ if [[ "$#" -gt 0 ]]; then
   fi
 fi
 
-mkdir -p "$HOME/.local/state/opencode" "$HOME/.local/share/opencode" "$HOME/.config/opencode"
+M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
+
+mkdir -p "$HOME/.local/state/opencode" "$HOME/.local/share/opencode" "$HOME/.config/opencode" "$M2_CACHE_HOST"
+
+if [[ "$CONTAINER_IMAGE" == *-java ]]; then
+  DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:Z")
+fi
 
 exec docker run --rm --tty --interactive \
   --name "$CONTAINER_NAME" \
