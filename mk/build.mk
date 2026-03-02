@@ -30,8 +30,8 @@ build-claude-java: build-base-java
 
 build-junie: build-base
 	docker build -t junie-container -f agents/junie/base.Containerfile .
-	$(MAKE) addbin-junie addbin-junie-auth addbin-junie-git
+	$(MAKE) addbin-junie addbin-junie-git
 
 build-junie-java: build-base-java
 	docker build -t junie-container-java -f agents/junie/java.Containerfile .
-	$(MAKE) addbin-junie addbin-junie-auth addbin-junie-git addbin-junie-java addbin-junie-java-git
+	$(MAKE) addbin-junie addbin-junie-git addbin-junie-java addbin-junie-java-git

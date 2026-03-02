@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-exec "$(dirname "$0")/junie" -p 127.0.0.1:62345:62345 -- "$@"

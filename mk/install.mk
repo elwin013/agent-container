@@ -1,7 +1,7 @@
 .PHONY: addbin addbin-auth addbin-git addbin-java addbin-java-git \
 	addbin-opencode addbin-opencode-auth addbin-opencode-git addbin-opencode-java addbin-opencode-java-git \
 	addbin-claude addbin-claude-git addbin-claude-java addbin-claude-java-git \
-	addbin-junie addbin-junie-auth addbin-junie-git addbin-junie-java addbin-junie-java-git \
+	addbin-junie addbin-junie-git addbin-junie-java addbin-junie-java-git \
 	removebin removebin-opencode removebin-claude removebin-junie ensure-local-bin
 
 addbin: addbin-opencode
@@ -64,11 +64,6 @@ addbin-junie: ensure-local-bin
 	cp agents/junie/scripts/junie ~/.local/bin/junie
 	chmod +x ~/.local/bin/junie
 
-addbin-junie-auth: ensure-local-bin
-	echo "Adding junie-auth to ~/.local/bin/junie-auth"
-	cp agents/junie/scripts/junie-auth ~/.local/bin/junie-auth
-	chmod +x ~/.local/bin/junie-auth
-
 addbin-junie-git: ensure-local-bin
 	echo "Adding junie-git to ~/.local/bin/junie-git"
 	cp agents/junie/scripts/junie-git ~/.local/bin/junie-git
@@ -104,7 +99,6 @@ removebin-claude:
 
 removebin-junie:
 	rm -f ~/.local/bin/junie
-	rm -f ~/.local/bin/junie-auth
 	rm -f ~/.local/bin/junie-git
 	rm -f ~/.local/bin/junie-java
 	rm -f ~/.local/bin/junie-java-git

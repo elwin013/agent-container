@@ -103,7 +103,6 @@ Claude wrappers:
 Junie wrappers:
 
 - `~/.local/bin/junie`
-- `~/.local/bin/junie-auth`
 - `~/.local/bin/junie-git`
 - `~/.local/bin/junie-java`
 - `~/.local/bin/junie-java-git`
@@ -137,7 +136,6 @@ Junie:
 
 ```sh
 junie
-junie-auth
 junie-git
 junie-java
 junie-java-git
@@ -190,7 +188,6 @@ Junie wrappers mount:
 
 - `$(pwd)` -> `/app`
 - `~/.junie` -> `/root/.junie`
-- `junie-auth` additionally exposes `127.0.0.1:62345:62345`
 
 Java wrappers additionally mount:
 
