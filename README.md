@@ -190,8 +190,6 @@ Junie wrappers mount:
 
 - `$(pwd)` -> `/app`
 - `~/.junie` -> `/root/.junie`
-- `~/.junie.json` -> `/root/.junie.json`
-- `~/.config/junie` -> `/root/.config/junie`
 - `junie-auth` additionally exposes `127.0.0.1:62345:62345`
 
 Java wrappers additionally mount:

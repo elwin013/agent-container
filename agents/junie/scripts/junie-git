@@ -33,8 +33,7 @@ fi
 
 M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
 
-mkdir -p "$HOME/.junie" "$HOME/.config/junie" "$M2_CACHE_HOST"
-touch "$HOME/.junie.json"
+mkdir -p "$HOME/.junie" "$M2_CACHE_HOST"
 
 GIT_CONFIG_HOST="${HOME}/.config/junie/gitconfig"
 mkdir -p "$(dirname "${GIT_CONFIG_HOST}")"
@@ -51,8 +50,6 @@ exec docker run --rm --tty --interactive \
   --name "$CONTAINER_NAME" \
   --add-host=host.docker.internal:host-gateway \
   -v "$HOME/.junie:/root/.junie:Z" \
-  -v "$HOME/.junie.json:/root/.junie.json:Z" \
-  -v "$HOME/.config/junie:/root/.config/junie:Z" \
   -e GIT_CONFIG_GLOBAL=/root/.config/junie/gitconfig \
   -e JUNIE_GIT_NAME="$JUNIE_GIT_NAME" \
   -e JUNIE_GIT_EMAIL="$JUNIE_GIT_EMAIL" \
