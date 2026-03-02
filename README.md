@@ -225,14 +225,6 @@ Java wrappers additionally mount:
 
 - `~/.local/share/agent-container/m2` -> `/root/.m2`
 
-## Junie status
-
-Junie images install `@jetbrains/junie-cli` globally via npm.
-
-## GitHub Copilot CLI status
-
-GitHub Copilot CLI images install `@github/copilot` globally via npm.
-
 ## Remove
 
 Remove local wrapper scripts:
