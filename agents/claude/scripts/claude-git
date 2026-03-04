@@ -3,14 +3,15 @@
 set -euo pipefail
 
 CONTAINER_IMAGE="${CONTAINER_IMAGE:-claude-code-container}"
+AGENT_NAME="${AGENT_NAME:-claude}"
 CONTAINER_NAME="claude-$(basename "$(pwd)")-$(date +%Y%m%d%H%M%S)"
 AGENT_NETWORK="${AGENT_NETWORK:-agentic_network}"
 
 DOCKER_RUN_ARGS=()
-CLAUDE_ARGS=("$@")
+AGENT_ARGS=("$@")
 
 if [[ "$#" -gt 0 ]]; then
-  CLAUDE_ARGS=()
+  AGENT_ARGS=()
   parsing_docker_args=true
 
   for arg in "$@"; do
@@ -22,12 +23,12 @@ if [[ "$#" -gt 0 ]]; then
     if [[ "$parsing_docker_args" == true ]]; then
       DOCKER_RUN_ARGS+=("$arg")
     else
-      CLAUDE_ARGS+=("$arg")
+      AGENT_ARGS+=("$arg")
     fi
   done
 
   if [[ "$parsing_docker_args" == true ]]; then
-    CLAUDE_ARGS=("$@")
+    AGENT_ARGS=("$@")
     DOCKER_RUN_ARGS=()
   fi
 fi
@@ -42,16 +43,17 @@ done
 docker network inspect "$AGENT_NETWORK" >/dev/null 2>&1 || docker network create "$AGENT_NETWORK" >/dev/null
 
 M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
+AGENT_CONFIG_DIR_HOST="${HOME}/.config/${AGENT_NAME}"
 
-mkdir -p "$HOME/.claude" "$HOME/.config/claude" "$M2_CACHE_HOST"
+mkdir -p "$HOME/.claude" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"
 touch "$HOME/.claude.json"
 
-GIT_CONFIG_HOST="${HOME}/.config/claude/gitconfig"
+GIT_CONFIG_HOST="${AGENT_CONFIG_DIR_HOST}/gitconfig"
 mkdir -p "$(dirname "${GIT_CONFIG_HOST}")"
 touch "${GIT_CONFIG_HOST}"
 
-CLAUDE_GIT_NAME="${CLAUDE_GIT_NAME:-Claude Code Agent}"
-CLAUDE_GIT_EMAIL="${CLAUDE_GIT_EMAIL:-claude@localhost}"
+AGENT_GIT_NAME="${AGENT_GIT_NAME:-Claude Code Agent}"
+AGENT_GIT_EMAIL="${AGENT_GIT_EMAIL:-claude@localhost}"
 
 if [[ "$CONTAINER_IMAGE" == *-java ]]; then
   DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:Z")
@@ -63,11 +65,11 @@ exec docker run --rm --tty --interactive \
   --network "$AGENT_NETWORK" \
   -v "$HOME/.claude:/root/.claude:Z" \
   -v "$HOME/.claude.json:/root/.claude.json:Z" \
-  -v "$HOME/.config/claude:/root/.config/claude:Z" \
-  -e GIT_CONFIG_GLOBAL=/root/.config/claude/gitconfig \
-  -e CLAUDE_GIT_NAME="$CLAUDE_GIT_NAME" \
-  -e CLAUDE_GIT_EMAIL="$CLAUDE_GIT_EMAIL" \
+  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \
+  -e GIT_CONFIG_GLOBAL="/root/.config/${AGENT_NAME}/gitconfig" \
+  -e AGENT_GIT_NAME="$AGENT_GIT_NAME" \
+  -e AGENT_GIT_EMAIL="$AGENT_GIT_EMAIL" \
   -v "$(pwd):/app:Z" \
   "${DOCKER_RUN_ARGS[@]}" \
   "$CONTAINER_IMAGE" \
-  bash -lc 'git config --global user.name "$CLAUDE_GIT_NAME"; git config --global user.email "$CLAUDE_GIT_EMAIL"; git config --global --replace-all safe.directory /app; git config --global commit.gpgsign false; git config --global tag.gpgsign false; exec claude "$@"' -- "${CLAUDE_ARGS[@]}"
+  bash -lc 'git config --global user.name "$AGENT_GIT_NAME"; git config --global user.email "$AGENT_GIT_EMAIL"; git config --global --replace-all safe.directory /app; git config --global commit.gpgsign false; git config --global tag.gpgsign false; exec claude "$@"' -- "${AGENT_ARGS[@]}"

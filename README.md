@@ -70,17 +70,20 @@ All wrappers attach containers to a shared Docker network named `agentic_network
 
 Defaults:
 
-- OpenCode: `OPENCODE_GIT_NAME`, `OPENCODE_GIT_EMAIL`
-- Claude: `CLAUDE_GIT_NAME`, `CLAUDE_GIT_EMAIL`
-- Junie: `JUNIE_GIT_NAME`, `JUNIE_GIT_EMAIL`
-- Copilot: `COPILOT_GIT_NAME`, `COPILOT_GIT_EMAIL`
+- All git wrappers use one shared variable set:
+  - `AGENT_NAME` (controls gitconfig path namespace)
+  - `AGENT_GIT_NAME` (git `user.name`)
+  - `AGENT_GIT_EMAIL` (git `user.email`)
+
+- Per-wrapper default values:
+  - OpenCode (`opencode-git`, `opencode-java-git`): `AGENT_NAME=opencode`, `AGENT_GIT_NAME="OpenCode Agent"`, `AGENT_GIT_EMAIL=opencode@localhost`
+  - Claude (`claude-git`, `claude-java-git`): `AGENT_NAME=claude`, `AGENT_GIT_NAME="Claude Code Agent"`, `AGENT_GIT_EMAIL=claude@localhost`
+  - Junie (`junie-git`, `junie-java-git`): `AGENT_NAME=junie`, `AGENT_GIT_NAME="Junie Agent"`, `AGENT_GIT_EMAIL=junie@localhost`
+  - Copilot (`copilot-git`, `copilot-java-git`): `AGENT_NAME=copilot`, `AGENT_GIT_NAME="GitHub Copilot Agent"`, `AGENT_GIT_EMAIL=copilot@localhost`
 
 Persistent gitconfig paths:
 
-- `~/.config/opencode/gitconfig`
-- `~/.config/claude/gitconfig`
-- `~/.config/junie/gitconfig`
-- `~/.config/copilot/gitconfig`
+- `${HOME}/.config/${AGENT_NAME}/gitconfig`
 
 ## Mounted Host Paths
 

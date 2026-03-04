@@ -3,14 +3,15 @@
 set -euo pipefail
 
 CONTAINER_IMAGE="${CONTAINER_IMAGE:-claude-code-container}"
+AGENT_NAME="${AGENT_NAME:-claude}"
 CONTAINER_NAME="claude-$(basename "$(pwd)")-$(date +%Y%m%d%H%M%S)"
 AGENT_NETWORK="${AGENT_NETWORK:-agentic_network}"
 
 DOCKER_RUN_ARGS=()
-CLAUDE_ARGS=("$@")
+AGENT_ARGS=("$@")
 
 if [[ "$#" -gt 0 ]]; then
-  CLAUDE_ARGS=()
+  AGENT_ARGS=()
   parsing_docker_args=true
 
   for arg in "$@"; do
@@ -22,12 +23,12 @@ if [[ "$#" -gt 0 ]]; then
     if [[ "$parsing_docker_args" == true ]]; then
       DOCKER_RUN_ARGS+=("$arg")
     else
-      CLAUDE_ARGS+=("$arg")
+      AGENT_ARGS+=("$arg")
     fi
   done
 
   if [[ "$parsing_docker_args" == true ]]; then
-    CLAUDE_ARGS=("$@")
+    AGENT_ARGS=("$@")
     DOCKER_RUN_ARGS=()
   fi
 fi
@@ -42,8 +43,9 @@ done
 docker network inspect "$AGENT_NETWORK" >/dev/null 2>&1 || docker network create "$AGENT_NETWORK" >/dev/null
 
 M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
+AGENT_CONFIG_DIR_HOST="${HOME}/.config/${AGENT_NAME}"
 
-mkdir -p "$HOME/.claude" "$HOME/.config/claude" "$M2_CACHE_HOST"
+mkdir -p "$HOME/.claude" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"
 touch "$HOME/.claude.json"
 
 if [[ "$CONTAINER_IMAGE" == *-java ]]; then
@@ -56,8 +58,8 @@ exec docker run --rm --tty --interactive \
   --network "$AGENT_NETWORK" \
   -v "$HOME/.claude:/root/.claude:Z" \
   -v "$HOME/.claude.json:/root/.claude.json:Z" \
-  -v "$HOME/.config/claude:/root/.config/claude:Z" \
+  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \
   -v "$(pwd):/app:Z" \
   "${DOCKER_RUN_ARGS[@]}" \
   "$CONTAINER_IMAGE" \
-  claude "${CLAUDE_ARGS[@]}"
+  claude "${AGENT_ARGS[@]}"

@@ -3,14 +3,15 @@
 set -euo pipefail
 
 CONTAINER_IMAGE="${CONTAINER_IMAGE:-junie-container}"
+AGENT_NAME="${AGENT_NAME:-junie}"
 CONTAINER_NAME="junie-$(basename "$(pwd)")-$(date +%Y%m%d%H%M%S)"
 AGENT_NETWORK="${AGENT_NETWORK:-agentic_network}"
 
 DOCKER_RUN_ARGS=()
-JUNIE_ARGS=("$@")
+AGENT_ARGS=("$@")
 
 if [[ "$#" -gt 0 ]]; then
-  JUNIE_ARGS=()
+  AGENT_ARGS=()
   parsing_docker_args=true
 
   for arg in "$@"; do
@@ -22,12 +23,12 @@ if [[ "$#" -gt 0 ]]; then
     if [[ "$parsing_docker_args" == true ]]; then
       DOCKER_RUN_ARGS+=("$arg")
     else
-      JUNIE_ARGS+=("$arg")
+      AGENT_ARGS+=("$arg")
     fi
   done
 
   if [[ "$parsing_docker_args" == true ]]; then
-    JUNIE_ARGS=("$@")
+    AGENT_ARGS=("$@")
     DOCKER_RUN_ARGS=()
   fi
 fi
@@ -42,15 +43,16 @@ done
 docker network inspect "$AGENT_NETWORK" >/dev/null 2>&1 || docker network create "$AGENT_NETWORK" >/dev/null
 
 M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
+AGENT_CONFIG_DIR_HOST="${HOME}/.config/${AGENT_NAME}"
 
-mkdir -p "$HOME/.junie" "$M2_CACHE_HOST"
+mkdir -p "$HOME/.junie" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"
 
-GIT_CONFIG_HOST="${HOME}/.config/junie/gitconfig"
+GIT_CONFIG_HOST="${AGENT_CONFIG_DIR_HOST}/gitconfig"
 mkdir -p "$(dirname "${GIT_CONFIG_HOST}")"
 touch "${GIT_CONFIG_HOST}"
 
-JUNIE_GIT_NAME="${JUNIE_GIT_NAME:-Junie Agent}"
-JUNIE_GIT_EMAIL="${JUNIE_GIT_EMAIL:-junie@localhost}"
+AGENT_GIT_NAME="${AGENT_GIT_NAME:-Junie Agent}"
+AGENT_GIT_EMAIL="${AGENT_GIT_EMAIL:-junie@localhost}"
 
 if [[ "$CONTAINER_IMAGE" == *-java ]]; then
   DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:Z")
@@ -61,10 +63,11 @@ exec docker run --rm --tty --interactive \
   --add-host=host.docker.internal:host-gateway \
   --network "$AGENT_NETWORK" \
   -v "$HOME/.junie:/root/.junie:Z" \
-  -e GIT_CONFIG_GLOBAL=/root/.config/junie/gitconfig \
-  -e JUNIE_GIT_NAME="$JUNIE_GIT_NAME" \
-  -e JUNIE_GIT_EMAIL="$JUNIE_GIT_EMAIL" \
+  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \
+  -e GIT_CONFIG_GLOBAL="/root/.config/${AGENT_NAME}/gitconfig" \
+  -e AGENT_GIT_NAME="$AGENT_GIT_NAME" \
+  -e AGENT_GIT_EMAIL="$AGENT_GIT_EMAIL" \
   -v "$(pwd):/app:Z" \
   "${DOCKER_RUN_ARGS[@]}" \
   "$CONTAINER_IMAGE" \
-  bash -lc 'git config --global user.name "$JUNIE_GIT_NAME"; git config --global user.email "$JUNIE_GIT_EMAIL"; git config --global --replace-all safe.directory /app; git config --global commit.gpgsign false; git config --global tag.gpgsign false; exec junie "$@"' -- "${JUNIE_ARGS[@]}"
+  bash -lc 'git config --global user.name "$AGENT_GIT_NAME"; git config --global user.email "$AGENT_GIT_EMAIL"; git config --global --replace-all safe.directory /app; git config --global commit.gpgsign false; git config --global tag.gpgsign false; exec junie "$@"' -- "${AGENT_ARGS[@]}"

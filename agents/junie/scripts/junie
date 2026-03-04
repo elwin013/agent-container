@@ -3,14 +3,15 @@
 set -euo pipefail
 
 CONTAINER_IMAGE="${CONTAINER_IMAGE:-junie-container}"
+AGENT_NAME="${AGENT_NAME:-junie}"
 CONTAINER_NAME="junie-$(basename "$(pwd)")-$(date +%Y%m%d%H%M%S)"
 AGENT_NETWORK="${AGENT_NETWORK:-agentic_network}"
 
 DOCKER_RUN_ARGS=()
-JUNIE_ARGS=("$@")
+AGENT_ARGS=("$@")
 
 if [[ "$#" -gt 0 ]]; then
-  JUNIE_ARGS=()
+  AGENT_ARGS=()
   parsing_docker_args=true
 
   for arg in "$@"; do
@@ -22,12 +23,12 @@ if [[ "$#" -gt 0 ]]; then
     if [[ "$parsing_docker_args" == true ]]; then
       DOCKER_RUN_ARGS+=("$arg")
     else
-      JUNIE_ARGS+=("$arg")
+      AGENT_ARGS+=("$arg")
     fi
   done
 
   if [[ "$parsing_docker_args" == true ]]; then
-    JUNIE_ARGS=("$@")
+    AGENT_ARGS=("$@")
     DOCKER_RUN_ARGS=()
   fi
 fi
@@ -57,4 +58,4 @@ exec docker run --rm --tty --interactive \
   -v "$(pwd):/app:Z" \
   "${DOCKER_RUN_ARGS[@]}" \
   "$CONTAINER_IMAGE" \
-  junie "${JUNIE_ARGS[@]}"
+  junie "${AGENT_ARGS[@]}"

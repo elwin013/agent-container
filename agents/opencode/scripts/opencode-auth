@@ -2,4 +2,6 @@
 
 set -euo pipefail
 
+AGENT_NAME="${AGENT_NAME:-opencode}"
+
 exec "$(dirname "$0")/opencode" -p 127.0.0.1:1455:1455 -- "$@"
