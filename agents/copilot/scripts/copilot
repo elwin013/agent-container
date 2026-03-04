@@ -4,6 +4,7 @@ set -euo pipefail
 
 CONTAINER_IMAGE="${CONTAINER_IMAGE:-copilot-container}"
 CONTAINER_NAME="copilot-$(basename "$(pwd)")-$(date +%Y%m%d%H%M%S)"
+AGENT_NETWORK="${AGENT_NETWORK:-agentic_network}"
 
 DOCKER_RUN_ARGS=()
 COPILOT_ARGS=("$@")
@@ -31,6 +32,15 @@ if [[ "$#" -gt 0 ]]; then
   fi
 fi
 
+for arg in "${DOCKER_RUN_ARGS[@]}"; do
+  if [[ "$arg" == "--network" || "$arg" == "--net" || "$arg" == --network=* || "$arg" == --net=* ]]; then
+    printf 'Error: custom network flags are not supported; wrappers always use network %s\n' "$AGENT_NETWORK" >&2
+    exit 1
+  fi
+done
+
+docker network inspect "$AGENT_NETWORK" >/dev/null 2>&1 || docker network create "$AGENT_NETWORK" >/dev/null
+
 M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
 
 mkdir -p "$HOME/.copilot" "$M2_CACHE_HOST"
@@ -42,6 +52,7 @@ fi
 exec docker run --rm --tty --interactive \
   --name "$CONTAINER_NAME" \
   --add-host=host.docker.internal:host-gateway \
+  --network "$AGENT_NETWORK" \
   -v "$HOME/.copilot:/root/.copilot:Z" \
   -v "$(pwd):/app:Z" \
   "${DOCKER_RUN_ARGS[@]}" \

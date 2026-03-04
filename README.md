@@ -45,12 +45,20 @@ Make sure `~/.local/bin` is on your `PATH`.
 Use `--` to separate container flags from agent flags:
 
 ```sh
-opencode --network host -e FOO=bar -- -s session-id
+opencode -e FOO=bar -- -s session-id
 claude --cpus 2 -- --help
 junie -e BAR=baz -- --help
 ```
 
 Without `--`, arguments are forwarded to the agent CLI.
+
+## Container Network
+
+All wrappers attach containers to a shared Docker network named `agentic_network`.
+
+- The network is auto-created on first run if it does not exist.
+- Custom container network flags (`--network` or `--net`) are not supported by wrappers.
+- You can override the default network name with `AGENT_NETWORK` if needed.
 
 ## Git Wrappers
 
