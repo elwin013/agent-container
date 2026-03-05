@@ -6,7 +6,7 @@ Base runtime: Fedora 43.
 
 ## Requirements
 
-- Docker or Podman
+- Docker or Podman - in rootless mode
 - `make`
 
 ## Quick Start
