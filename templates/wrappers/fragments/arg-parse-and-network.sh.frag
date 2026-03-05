@@ -1,13 +1,3 @@
-#!/usr/bin/env bash
-# GENERATED FILE - DO NOT EDIT
-
-set -euo pipefail
-
-CONTAINER_IMAGE="${CONTAINER_IMAGE:-junie-container}"
-AGENT_NAME="${AGENT_NAME:-junie}"
-CONTAINER_NAME="junie-$(basename "$(pwd)")-$(date +%Y%m%d%H%M%S)"
-AGENT_NETWORK="${AGENT_NETWORK:-agentic_network}"
-
 DOCKER_RUN_ARGS=()
 AGENT_ARGS=("$@")
 
@@ -42,22 +32,3 @@ for arg in "${DOCKER_RUN_ARGS[@]}"; do
 done
 
 docker network inspect "$AGENT_NETWORK" >/dev/null 2>&1 || docker network create "$AGENT_NETWORK" >/dev/null
-
-M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
-AGENT_CONFIG_DIR_HOST="${HOME}/.config/${AGENT_NAME}"
-
-mkdir -p "$HOME/.junie" "$M2_CACHE_HOST"
-
-if [[ "$CONTAINER_IMAGE" == *-java ]]; then
-  DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:Z")
-fi
-
-exec docker run --rm --tty --interactive \
-  --name "$CONTAINER_NAME" \
-  --add-host=host.docker.internal:host-gateway \
-  --network "$AGENT_NETWORK" \
-  -v "$HOME/.junie:/root/.junie:Z" \
-  -v "$(pwd):/app:Z" \
-  "${DOCKER_RUN_ARGS[@]}" \
-  "$CONTAINER_IMAGE" \
-  junie "${AGENT_ARGS[@]}"

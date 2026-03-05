@@ -3,6 +3,7 @@
 	addbin-claude addbin-claude-git addbin-claude-java addbin-claude-java-git \
 	addbin-junie addbin-junie-git addbin-junie-java addbin-junie-java-git \
 	addbin-copilot addbin-copilot-git addbin-copilot-java addbin-copilot-java-git \
+	render-wrappers check-generated-wrappers \
 	removebin removebin-opencode removebin-claude removebin-junie removebin-copilot ensure-local-bin
 
 addbin: addbin-opencode
@@ -14,6 +15,17 @@ addbin-git: addbin-opencode-git
 addbin-java: addbin-opencode-java
 
 addbin-java-git: addbin-opencode-java-git
+
+render-wrappers:
+	bash scripts/render-wrappers
+
+check-generated-wrappers:
+	bash scripts/render-wrappers --check
+
+addbin-opencode addbin-opencode-auth addbin-opencode-git addbin-opencode-java addbin-opencode-java-git \
+addbin-claude addbin-claude-git addbin-claude-java addbin-claude-java-git \
+addbin-junie addbin-junie-git addbin-junie-java addbin-junie-java-git \
+addbin-copilot addbin-copilot-git addbin-copilot-java addbin-copilot-java-git: render-wrappers
 
 addbin-opencode: ensure-local-bin
 	echo "Adding opencode to ~/.local/bin/opencode"

@@ -33,6 +33,8 @@ Backward-compatible aliases:
 
 All wrappers run from your project directory and are installed to `~/.local/bin`.
 
+Wrapper sources in `agents/*/scripts` are generated from templates in `templates/wrappers`.
+
 - OpenCode: `opencode`, `opencode-auth`, `opencode-git`, `opencode-java`, `opencode-java-git`
 - Claude Code: `claude`, `claude-git`, `claude-java`, `claude-java-git`
 - Junie: `junie`, `junie-git`, `junie-java`, `junie-java-git`
@@ -84,6 +86,14 @@ Defaults:
 Persistent gitconfig paths:
 
 - `${HOME}/.config/${AGENT_NAME}/gitconfig`
+
+## Wrapper Generation
+
+- Render all wrappers: `make render-wrappers`
+- Render one agent only: `bash scripts/render-wrappers <agent-id>`
+- Verify generated wrappers are up-to-date: `make check-generated-wrappers`
+
+`addbin-*` targets automatically render wrappers before copying to `~/.local/bin`.
 
 ## Mounted Host Paths
 

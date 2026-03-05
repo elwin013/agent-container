@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# GENERATED FILE - DO NOT EDIT
 
 set -euo pipefail
 
@@ -43,6 +44,7 @@ done
 docker network inspect "$AGENT_NETWORK" >/dev/null 2>&1 || docker network create "$AGENT_NETWORK" >/dev/null
 
 M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
+AGENT_CONFIG_DIR_HOST="${HOME}/.config/${AGENT_NAME}"
 
 mkdir -p "$HOME/.copilot" "$M2_CACHE_HOST"
 

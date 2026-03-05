@@ -1,0 +1,1 @@
+git config --global user.name "$AGENT_GIT_NAME"; git config --global user.email "$AGENT_GIT_EMAIL"; git config --global --replace-all safe.directory /app; git config --global commit.gpgsign false; git config --global tag.gpgsign false; exec __AGENT_CMD__ "$@"

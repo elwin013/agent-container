@@ -1,0 +1,237 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TEMPLATE_DIR="${REPO_ROOT}/templates/wrappers"
+FRAGMENT_DIR="${TEMPLATE_DIR}/fragments"
+AGENTS_CONF="${TEMPLATE_DIR}/agents.conf"
+ARG_PARSE_AND_NETWORK_FRAGMENT_PATH="${FRAGMENT_DIR}/arg-parse-and-network.sh.frag"
+GIT_BOOTSTRAP_FRAGMENT_PATH="${FRAGMENT_DIR}/git-bootstrap.sh.frag"
+
+CHECK_MODE=false
+TARGET_AGENT=""
+
+if [[ "${1:-}" == "--check" ]]; then
+  CHECK_MODE=true
+  shift
+fi
+
+if [[ "$#" -gt 1 ]]; then
+  printf 'Usage: %s [--check] [agent-id]\n' "$0" >&2
+  exit 2
+fi
+
+if [[ "$#" -eq 1 ]]; then
+  TARGET_AGENT="$1"
+fi
+
+ARG_PARSE_AND_NETWORK_FRAGMENT="$(<"${ARG_PARSE_AND_NETWORK_FRAGMENT_PATH}")"
+GIT_BOOTSTRAP_FRAGMENT="$(<"${GIT_BOOTSTRAP_FRAGMENT_PATH}")"
+
+render_template() {
+  local template_path="$1"
+  local output_path="$2"
+  shift 2
+
+  local content
+  content="$(<"${template_path}")"
+
+  local pair key value
+  for pair in "$@"; do
+    key="${pair%%=*}"
+    value="${pair#*=}"
+    value="${value//\\/\\\\}"
+    value="${value//&/\\&}"
+    content="${content//__${key}__/${value}}"
+  done
+
+  if [[ "${CHECK_MODE}" == true ]]; then
+    local existing
+    if [[ -f "${output_path}" ]]; then
+      existing="$(<"${output_path}")"
+    else
+      existing=""
+    fi
+
+    if [[ ! -f "${output_path}" || "${existing}" != "${content}" ]]; then
+      printf 'Out of date wrapper: %s\n' "${output_path}" >&2
+      return 1
+    fi
+    return 0
+  fi
+
+  printf '%s\n' "${content}" > "${output_path}"
+  chmod +x "${output_path}"
+}
+
+base_host_setup() {
+  local agent_id="$1"
+  case "${agent_id}" in
+    opencode)
+      printf '%s' 'mkdir -p "$HOME/.local/state/opencode" "$HOME/.local/share/opencode" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"'
+      ;;
+    claude)
+      printf '%s' 'mkdir -p "$HOME/.claude" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"'
+      printf '\n%s' 'touch "$HOME/.claude.json"'
+      ;;
+    junie)
+      printf '%s' 'mkdir -p "$HOME/.junie" "$M2_CACHE_HOST"'
+      ;;
+    copilot)
+      printf '%s' 'mkdir -p "$HOME/.copilot" "$M2_CACHE_HOST"'
+      ;;
+    *)
+      printf 'Unsupported agent id: %s\n' "${agent_id}" >&2
+      return 1
+      ;;
+  esac
+}
+
+git_host_setup() {
+  local agent_id="$1"
+  case "${agent_id}" in
+    opencode)
+      printf '%s' 'mkdir -p "$HOME/.local/state/opencode" "$HOME/.local/share/opencode" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"'
+      ;;
+    claude)
+      printf '%s' 'mkdir -p "$HOME/.claude" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"'
+      printf '\n%s' 'touch "$HOME/.claude.json"'
+      ;;
+    junie)
+      printf '%s' 'mkdir -p "$HOME/.junie" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"'
+      ;;
+    copilot)
+      printf '%s' 'mkdir -p "$HOME/.copilot" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"'
+      ;;
+    *)
+      printf 'Unsupported agent id: %s\n' "${agent_id}" >&2
+      return 1
+      ;;
+  esac
+}
+
+base_mount_lines() {
+  local agent_id="$1"
+  case "${agent_id}" in
+    opencode)
+      printf '%s\n' '  -v "$HOME/.local/state/opencode:/root/.local/state/opencode:Z" \'
+      printf '%s\n' '  -v "$HOME/.local/share/opencode:/root/.local/share/opencode:Z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \'
+      ;;
+    claude)
+      printf '%s\n' '  -v "$HOME/.claude:/root/.claude:Z" \'
+      printf '%s\n' '  -v "$HOME/.claude.json:/root/.claude.json:Z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \'
+      ;;
+    junie)
+      printf '%s' '  -v "$HOME/.junie:/root/.junie:Z" \'
+      ;;
+    copilot)
+      printf '%s' '  -v "$HOME/.copilot:/root/.copilot:Z" \'
+      ;;
+    *)
+      printf 'Unsupported agent id: %s\n' "${agent_id}" >&2
+      return 1
+      ;;
+  esac
+}
+
+git_mount_lines() {
+  local agent_id="$1"
+  case "${agent_id}" in
+    opencode)
+      printf '%s\n' '  -v "$HOME/.local/state/opencode:/root/.local/state/opencode:Z" \'
+      printf '%s\n' '  -v "$HOME/.local/share/opencode:/root/.local/share/opencode:Z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \'
+      ;;
+    claude)
+      printf '%s\n' '  -v "$HOME/.claude:/root/.claude:Z" \'
+      printf '%s\n' '  -v "$HOME/.claude.json:/root/.claude.json:Z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \'
+      ;;
+    junie)
+      printf '%s\n' '  -v "$HOME/.junie:/root/.junie:Z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \'
+      ;;
+    copilot)
+      printf '%s\n' '  -v "$HOME/.copilot:/root/.copilot:Z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \'
+      ;;
+    *)
+      printf 'Unsupported agent id: %s\n' "${agent_id}" >&2
+      return 1
+      ;;
+  esac
+}
+
+status=0
+
+while IFS='|' read -r agent_id agent_cmd base_image java_image git_name git_email; do
+  if [[ -z "${agent_id}" || "${agent_id}" == \#* ]]; then
+    continue
+  fi
+
+  if [[ -n "${TARGET_AGENT}" && "${TARGET_AGENT}" != "${agent_id}" ]]; then
+    continue
+  fi
+
+  script_dir="${REPO_ROOT}/agents/${agent_id}/scripts"
+
+  base_wrapper="${script_dir}/${agent_cmd}"
+  git_wrapper="${script_dir}/${agent_cmd}-git"
+  java_wrapper="${script_dir}/${agent_cmd}-java"
+  java_git_wrapper="${script_dir}/${agent_cmd}-java-git"
+
+  base_setup="$(base_host_setup "${agent_id}")"
+  git_setup="$(git_host_setup "${agent_id}")"
+  base_mounts="$(base_mount_lines "${agent_id}")"
+  git_mounts="$(git_mount_lines "${agent_id}")"
+
+  if ! render_template "${TEMPLATE_DIR}/wrapper.base.sh.tpl" "${base_wrapper}" \
+    "CONTAINER_IMAGE_DEFAULT=${base_image}" \
+    "AGENT_NAME_DEFAULT=${agent_id}" \
+    "AGENT_CMD=${agent_cmd}" \
+    "ARG_PARSE_AND_NETWORK_FRAGMENT=${ARG_PARSE_AND_NETWORK_FRAGMENT}" \
+    "HOST_SETUP_LINES=${base_setup}" \
+    "DOCKER_MOUNT_LINES=${base_mounts}"; then
+    status=1
+  fi
+
+  if ! render_template "${TEMPLATE_DIR}/wrapper.git.sh.tpl" "${git_wrapper}" \
+    "CONTAINER_IMAGE_DEFAULT=${base_image}" \
+    "AGENT_NAME_DEFAULT=${agent_id}" \
+    "GIT_BOOTSTRAP_FRAGMENT=${GIT_BOOTSTRAP_FRAGMENT}" \
+    "AGENT_CMD=${agent_cmd}" \
+    "AGENT_GIT_NAME_DEFAULT=${git_name}" \
+    "AGENT_GIT_EMAIL_DEFAULT=${git_email}" \
+    "ARG_PARSE_AND_NETWORK_FRAGMENT=${ARG_PARSE_AND_NETWORK_FRAGMENT}" \
+    "HOST_SETUP_LINES=${git_setup}" \
+    "DOCKER_MOUNT_LINES=${git_mounts}"; then
+    status=1
+  fi
+
+  if ! render_template "${TEMPLATE_DIR}/wrapper.java.sh.tpl" "${java_wrapper}" \
+    "CONTAINER_IMAGE_JAVA_DEFAULT=${java_image}" \
+    "BASE_WRAPPER_NAME=${agent_cmd}"; then
+    status=1
+  fi
+
+  if ! render_template "${TEMPLATE_DIR}/wrapper.java-git.sh.tpl" "${java_git_wrapper}" \
+    "CONTAINER_IMAGE_JAVA_DEFAULT=${java_image}" \
+    "GIT_WRAPPER_NAME=${agent_cmd}-git"; then
+    status=1
+  fi
+
+done < "${AGENTS_CONF}"
+
+if [[ -n "${TARGET_AGENT}" ]]; then
+  if ! grep -qE "^${TARGET_AGENT}\|" "${AGENTS_CONF}"; then
+    printf 'Unknown agent id: %s\n' "${TARGET_AGENT}" >&2
+    exit 2
+  fi
+fi
+
+if [[ "${status}" -ne 0 ]]; then
+  exit "${status}"
+fi
