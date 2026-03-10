@@ -35,10 +35,10 @@ All wrappers run from your project directory and are installed to `~/.local/bin`
 
 Wrapper sources in `agents/*/scripts` are generated from templates in `templates/wrappers`.
 
-- OpenCode: `opencode`, `opencode-auth`, `opencode-git`, `opencode-java`, `opencode-java-git`
-- Claude Code: `claude`, `claude-git`, `claude-java`, `claude-java-git`
-- Junie: `junie`, `junie-git`, `junie-java`, `junie-java-git`
-- GitHub Copilot CLI: `copilot`, `copilot-git`, `copilot-java`, `copilot-java-git`
+- OpenCode: `opencode`, `opencode-auth`, `opencode-java`
+- Claude Code: `claude`, `claude-java`
+- Junie: `junie`, `junie-java`
+- GitHub Copilot CLI: `copilot`, `copilot-java`
 
 Make sure `~/.local/bin` is on your `PATH`.
 
@@ -62,9 +62,9 @@ All wrappers attach containers to a shared Docker network named `agentic_network
 - Custom container network flags (`--network` or `--net`) are not supported by wrappers.
 - You can override the default network name with `AGENT_NETWORK` if needed.
 
-## Git Wrappers
+## Git Configuration
 
-`*-git` wrappers configure git inside the container:
+All wrappers configure git inside the container:
 
 - set user name/email
 - set `/app` as `safe.directory`
@@ -72,16 +72,16 @@ All wrappers attach containers to a shared Docker network named `agentic_network
 
 Defaults:
 
-- All git wrappers use one shared variable set:
+- All wrappers use one shared variable set:
   - `AGENT_NAME` (controls gitconfig path namespace)
   - `AGENT_GIT_NAME` (git `user.name`)
   - `AGENT_GIT_EMAIL` (git `user.email`)
 
 - Per-wrapper default values:
-  - OpenCode (`opencode-git`, `opencode-java-git`): `AGENT_NAME=opencode`, `AGENT_GIT_NAME="OpenCode Agent"`, `AGENT_GIT_EMAIL=opencode@localhost`
-  - Claude (`claude-git`, `claude-java-git`): `AGENT_NAME=claude`, `AGENT_GIT_NAME="Claude Code Agent"`, `AGENT_GIT_EMAIL=claude@localhost`
-  - Junie (`junie-git`, `junie-java-git`): `AGENT_NAME=junie`, `AGENT_GIT_NAME="Junie Agent"`, `AGENT_GIT_EMAIL=junie@localhost`
-  - Copilot (`copilot-git`, `copilot-java-git`): `AGENT_NAME=copilot`, `AGENT_GIT_NAME="GitHub Copilot Agent"`, `AGENT_GIT_EMAIL=copilot@localhost`
+  - OpenCode (`opencode`, `opencode-java`): `AGENT_NAME=opencode`, `AGENT_GIT_NAME="OpenCode Agent"`, `AGENT_GIT_EMAIL=opencode@localhost`
+  - Claude (`claude`, `claude-java`): `AGENT_NAME=claude`, `AGENT_GIT_NAME="Claude Code Agent"`, `AGENT_GIT_EMAIL=claude@localhost`
+  - Junie (`junie`, `junie-java`): `AGENT_NAME=junie`, `AGENT_GIT_NAME="Junie Agent"`, `AGENT_GIT_EMAIL=junie@localhost`
+  - Copilot (`copilot`, `copilot-java`): `AGENT_NAME=copilot`, `AGENT_GIT_NAME="GitHub Copilot Agent"`, `AGENT_GIT_EMAIL=copilot@localhost`
 
 Persistent gitconfig paths:
 

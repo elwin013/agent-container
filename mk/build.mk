@@ -14,32 +14,32 @@ build-base-java: build-base
 
 build-opencode: build-base
 	docker build -t opencode-container -f agents/opencode/base.Containerfile .
-	$(MAKE) addbin-opencode addbin-opencode-auth addbin-opencode-git
+	$(MAKE) addbin-opencode
 
 build-opencode-java: build-base-java
 	docker build -t opencode-container-java -f agents/opencode/java.Containerfile .
-	$(MAKE) addbin-opencode addbin-opencode-auth addbin-opencode-git addbin-opencode-java addbin-opencode-java-git
+	$(MAKE) addbin-opencode-java
 
 build-claude: build-base
 	docker build -t claude-code-container -f agents/claude/base.Containerfile .
-	$(MAKE) addbin-claude addbin-claude-git
+	$(MAKE) addbin-claude
 
 build-claude-java: build-base-java
 	docker build -t claude-code-container-java -f agents/claude/java.Containerfile .
-	$(MAKE) addbin-claude addbin-claude-git addbin-claude-java addbin-claude-java-git
+	$(MAKE) addbin-claude-java
 
 build-junie: build-base
 	docker build -t junie-container -f agents/junie/base.Containerfile .
-	$(MAKE) addbin-junie addbin-junie-git
+	$(MAKE) addbin-junie
 
 build-junie-java: build-base-java
 	docker build -t junie-container-java -f agents/junie/java.Containerfile .
-	$(MAKE) addbin-junie addbin-junie-git addbin-junie-java addbin-junie-java-git
+	$(MAKE) addbin-junie-java
 
 build-copilot: build-base
 	docker build -t copilot-container -f agents/copilot/base.Containerfile .
-	$(MAKE) addbin-copilot addbin-copilot-git
+	$(MAKE) addbin-copilot
 
 build-copilot-java: build-base-java
 	docker build -t copilot-container-java -f agents/copilot/java.Containerfile .
-	$(MAKE) addbin-copilot addbin-copilot-git addbin-copilot-java addbin-copilot-java-git
+	$(MAKE) addbin-copilot-java

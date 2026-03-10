@@ -46,7 +46,14 @@ docker network inspect "$AGENT_NETWORK" >/dev/null 2>&1 || docker network create
 M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
 AGENT_CONFIG_DIR_HOST="${HOME}/.config/${AGENT_NAME}"
 
-mkdir -p "$HOME/.copilot" "$M2_CACHE_HOST"
+mkdir -p "$HOME/.copilot" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"
+
+GIT_CONFIG_HOST="${AGENT_CONFIG_DIR_HOST}/gitconfig"
+mkdir -p "$(dirname "${GIT_CONFIG_HOST}")"
+touch "${GIT_CONFIG_HOST}"
+
+AGENT_GIT_NAME="${AGENT_GIT_NAME:-GitHub Copilot Agent}"
+AGENT_GIT_EMAIL="${AGENT_GIT_EMAIL:-copilot@localhost}"
 
 if [[ "$CONTAINER_IMAGE" == *-java ]]; then
   DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:Z")
@@ -57,7 +64,11 @@ exec docker run --rm --tty --interactive \
   --add-host=host.docker.internal:host-gateway \
   --network "$AGENT_NETWORK" \
   -v "$HOME/.copilot:/root/.copilot:Z" \
+  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \
+  -e GIT_CONFIG_GLOBAL="/root/.config/${AGENT_NAME}/gitconfig" \
+  -e AGENT_GIT_NAME="$AGENT_GIT_NAME" \
+  -e AGENT_GIT_EMAIL="$AGENT_GIT_EMAIL" \
   -v "$(pwd):/app:Z" \
   "${DOCKER_RUN_ARGS[@]}" \
   "$CONTAINER_IMAGE" \
-  copilot "${AGENT_ARGS[@]}"
+  bash -lc 'git config --global user.name "$AGENT_GIT_NAME"; git config --global user.email "$AGENT_GIT_EMAIL"; git config --global --replace-all safe.directory /app; git config --global commit.gpgsign false; git config --global tag.gpgsign false; exec copilot "$@"' -- "${AGENT_ARGS[@]}"

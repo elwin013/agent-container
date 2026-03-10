@@ -65,29 +65,6 @@ render_template() {
   chmod +x "${output_path}"
 }
 
-base_host_setup() {
-  local agent_id="$1"
-  case "${agent_id}" in
-    opencode)
-      printf '%s' 'mkdir -p "$HOME/.local/state/opencode" "$HOME/.local/share/opencode" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"'
-      ;;
-    claude)
-      printf '%s' 'mkdir -p "$HOME/.claude" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"'
-      printf '\n%s' 'touch "$HOME/.claude.json"'
-      ;;
-    junie)
-      printf '%s' 'mkdir -p "$HOME/.junie" "$M2_CACHE_HOST"'
-      ;;
-    copilot)
-      printf '%s' 'mkdir -p "$HOME/.copilot" "$M2_CACHE_HOST"'
-      ;;
-    *)
-      printf 'Unsupported agent id: %s\n' "${agent_id}" >&2
-      return 1
-      ;;
-  esac
-}
-
 git_host_setup() {
   local agent_id="$1"
   case "${agent_id}" in
@@ -103,32 +80,6 @@ git_host_setup() {
       ;;
     copilot)
       printf '%s' 'mkdir -p "$HOME/.copilot" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"'
-      ;;
-    *)
-      printf 'Unsupported agent id: %s\n' "${agent_id}" >&2
-      return 1
-      ;;
-  esac
-}
-
-base_mount_lines() {
-  local agent_id="$1"
-  case "${agent_id}" in
-    opencode)
-      printf '%s\n' '  -v "$HOME/.local/state/opencode:/root/.local/state/opencode:Z" \'
-      printf '%s\n' '  -v "$HOME/.local/share/opencode:/root/.local/share/opencode:Z" \'
-      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \'
-      ;;
-    claude)
-      printf '%s\n' '  -v "$HOME/.claude:/root/.claude:Z" \'
-      printf '%s\n' '  -v "$HOME/.claude.json:/root/.claude.json:Z" \'
-      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \'
-      ;;
-    junie)
-      printf '%s' '  -v "$HOME/.junie:/root/.junie:Z" \'
-      ;;
-    copilot)
-      printf '%s' '  -v "$HOME/.copilot:/root/.copilot:Z" \'
       ;;
     *)
       printf 'Unsupported agent id: %s\n' "${agent_id}" >&2
@@ -178,27 +129,13 @@ while IFS='|' read -r agent_id agent_cmd base_image java_image git_name git_emai
 
   script_dir="${REPO_ROOT}/agents/${agent_id}/scripts"
 
-  base_wrapper="${script_dir}/${agent_cmd}"
-  git_wrapper="${script_dir}/${agent_cmd}-git"
+  wrapper="${script_dir}/${agent_cmd}"
   java_wrapper="${script_dir}/${agent_cmd}-java"
-  java_git_wrapper="${script_dir}/${agent_cmd}-java-git"
 
-  base_setup="$(base_host_setup "${agent_id}")"
   git_setup="$(git_host_setup "${agent_id}")"
-  base_mounts="$(base_mount_lines "${agent_id}")"
   git_mounts="$(git_mount_lines "${agent_id}")"
 
-  if ! render_template "${TEMPLATE_DIR}/wrapper.base.sh.tpl" "${base_wrapper}" \
-    "CONTAINER_IMAGE_DEFAULT=${base_image}" \
-    "AGENT_NAME_DEFAULT=${agent_id}" \
-    "AGENT_CMD=${agent_cmd}" \
-    "ARG_PARSE_AND_NETWORK_FRAGMENT=${ARG_PARSE_AND_NETWORK_FRAGMENT}" \
-    "HOST_SETUP_LINES=${base_setup}" \
-    "DOCKER_MOUNT_LINES=${base_mounts}"; then
-    status=1
-  fi
-
-  if ! render_template "${TEMPLATE_DIR}/wrapper.git.sh.tpl" "${git_wrapper}" \
+  if ! render_template "${TEMPLATE_DIR}/wrapper.git.sh.tpl" "${wrapper}" \
     "CONTAINER_IMAGE_DEFAULT=${base_image}" \
     "AGENT_NAME_DEFAULT=${agent_id}" \
     "GIT_BOOTSTRAP_FRAGMENT=${GIT_BOOTSTRAP_FRAGMENT}" \
@@ -211,15 +148,9 @@ while IFS='|' read -r agent_id agent_cmd base_image java_image git_name git_emai
     status=1
   fi
 
-  if ! render_template "${TEMPLATE_DIR}/wrapper.java.sh.tpl" "${java_wrapper}" \
+  if ! render_template "${TEMPLATE_DIR}/wrapper.java-git.sh.tpl" "${java_wrapper}" \
     "CONTAINER_IMAGE_JAVA_DEFAULT=${java_image}" \
-    "BASE_WRAPPER_NAME=${agent_cmd}"; then
-    status=1
-  fi
-
-  if ! render_template "${TEMPLATE_DIR}/wrapper.java-git.sh.tpl" "${java_git_wrapper}" \
-    "CONTAINER_IMAGE_JAVA_DEFAULT=${java_image}" \
-    "GIT_WRAPPER_NAME=${agent_cmd}-git"; then
+    "GIT_WRAPPER_NAME=${agent_cmd}"; then
     status=1
   fi
 

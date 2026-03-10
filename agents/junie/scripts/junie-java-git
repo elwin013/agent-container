@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-# GENERATED FILE - DO NOT EDIT
-
-set -euo pipefail
-
-export CONTAINER_IMAGE="${CONTAINER_IMAGE:-junie-container-java}"
-
-exec "$(dirname "$0")/junie-git" "$@"

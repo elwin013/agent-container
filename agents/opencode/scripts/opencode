@@ -48,6 +48,13 @@ AGENT_CONFIG_DIR_HOST="${HOME}/.config/${AGENT_NAME}"
 
 mkdir -p "$HOME/.local/state/opencode" "$HOME/.local/share/opencode" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"
 
+GIT_CONFIG_HOST="${AGENT_CONFIG_DIR_HOST}/gitconfig"
+mkdir -p "$(dirname "${GIT_CONFIG_HOST}")"
+touch "${GIT_CONFIG_HOST}"
+
+AGENT_GIT_NAME="${AGENT_GIT_NAME:-OpenCode Agent}"
+AGENT_GIT_EMAIL="${AGENT_GIT_EMAIL:-opencode@localhost}"
+
 if [[ "$CONTAINER_IMAGE" == *-java ]]; then
   DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:Z")
 fi
@@ -59,7 +66,10 @@ exec docker run --rm --tty --interactive \
   -v "$HOME/.local/state/opencode:/root/.local/state/opencode:Z" \
   -v "$HOME/.local/share/opencode:/root/.local/share/opencode:Z" \
   -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \
+  -e GIT_CONFIG_GLOBAL="/root/.config/${AGENT_NAME}/gitconfig" \
+  -e AGENT_GIT_NAME="$AGENT_GIT_NAME" \
+  -e AGENT_GIT_EMAIL="$AGENT_GIT_EMAIL" \
   -v "$(pwd):/app:Z" \
   "${DOCKER_RUN_ARGS[@]}" \
   "$CONTAINER_IMAGE" \
-  opencode "${AGENT_ARGS[@]}"
+  bash -lc 'git config --global user.name "$AGENT_GIT_NAME"; git config --global user.email "$AGENT_GIT_EMAIL"; git config --global --replace-all safe.directory /app; git config --global commit.gpgsign false; git config --global tag.gpgsign false; exec opencode "$@"' -- "${AGENT_ARGS[@]}"
