@@ -114,6 +114,31 @@ Persistent gitconfig paths:
 
 `addbin-*` targets automatically render wrappers before copying to `~/.local/bin`.
 
+## Updating Tools
+
+To update an agent to a new version without touching your local configuration, rebuild its image and reinstall wrappers. User data and settings are stored in your home directory (see "Mounted Host Paths"), so updates do not remove or reset them.
+
+Force a rebuild for a specific agent (for example - opencode):
+
+```sh
+git pull
+make rebuild-opencode
+```
+
+Rebuild base images:
+
+```sh
+git pull
+make rebuild-base
+make rebuild-base-java
+```
+
+You can also rebuild just one Containerfile directly:
+
+```sh
+docker build --no-cache -t opencode-container -f agents/opencode/base.Containerfile .
+```
+
 ## Mounted Host Paths
 
 - OpenCode: `~/.local/state/opencode`, `~/.local/share/opencode`, `~/.config/opencode`
