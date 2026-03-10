@@ -42,6 +42,25 @@ Wrapper sources in `agents/*/scripts` are generated from templates in `templates
 
 Make sure `~/.local/bin` is on your `PATH`.
 
+## PATH Setup
+
+On some systems (notably Ubuntu), `~/.local/bin` is not on `PATH` by default. Add it to your shell init file:
+
+```sh
+# bash (Ubuntu default)
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+
+# zsh
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+
+# fish
+fish_add_path "$HOME/.local/bin"
+```
+
+On macOS with zsh, use `~/.zshrc`. On other shells, add the same `export PATH=...` line to the shell's init file and restart your terminal.
+
 ## Passing Runtime Flags
 
 Use `--` to separate container flags from agent flags:
