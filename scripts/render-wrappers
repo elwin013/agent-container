@@ -81,6 +81,9 @@ git_host_setup() {
     copilot)
       printf '%s' 'mkdir -p "$HOME/.copilot" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"'
       ;;
+    codex)
+      printf '%s' 'mkdir -p "$HOME/.codex" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"'
+      ;;
     *)
       printf 'Unsupported agent id: %s\n' "${agent_id}" >&2
       return 1
@@ -107,6 +110,10 @@ git_mount_lines() {
       ;;
     copilot)
       printf '%s\n' '  -v "$HOME/.copilot:/root/.copilot:Z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \'
+      ;;
+    codex)
+      printf '%s\n' '  -v "$HOME/.codex:/root/.codex:Z" \'
       printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:Z" \'
       ;;
     *)

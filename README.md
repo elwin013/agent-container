@@ -23,6 +23,7 @@ Also available:
 - `make build-claude`, `make build-claude-java`
 - `make build-junie`, `make build-junie-java`
 - `make build-copilot`, `make build-copilot-java`
+- `make build-codex`, `make build-codex-java`
 
 Backward-compatible aliases:
 
@@ -39,6 +40,7 @@ Wrapper sources in `agents/*/scripts` are generated from templates in `templates
 - Claude Code: `claude`, `claude-java`
 - Junie: `junie`, `junie-java`
 - GitHub Copilot CLI: `copilot`, `copilot-java`
+- OpenAI Codex CLI: `codex`, `codex-java`
 
 Make sure `~/.local/bin` is on your `PATH`.
 
@@ -101,6 +103,7 @@ Defaults:
   - Claude (`claude`, `claude-java`): `AGENT_NAME=claude`, `AGENT_GIT_NAME="Claude Code Agent"`, `AGENT_GIT_EMAIL=claude@localhost`
   - Junie (`junie`, `junie-java`): `AGENT_NAME=junie`, `AGENT_GIT_NAME="Junie Agent"`, `AGENT_GIT_EMAIL=junie@localhost`
   - Copilot (`copilot`, `copilot-java`): `AGENT_NAME=copilot`, `AGENT_GIT_NAME="GitHub Copilot Agent"`, `AGENT_GIT_EMAIL=copilot@localhost`
+  - Codex (`codex`, `codex-java`): `AGENT_NAME=codex`, `AGENT_GIT_NAME="OpenAI Codex Agent"`, `AGENT_GIT_EMAIL=codex@localhost`
 
 Persistent gitconfig paths:
 
@@ -146,6 +149,7 @@ docker build --no-cache -t opencode-container -f agents/opencode/base.Containerf
 - Claude: `~/.claude`, `~/.claude.json`, `~/.config/claude`
 - Junie: `~/.junie`
 - Copilot: `~/.copilot`
+- Codex: `~/.codex`
 - Java wrappers: `~/.local/share/agent-container/m2` -> `/root/.m2`
 
 ## Repository Layout
@@ -170,5 +174,6 @@ docker rmi \
   opencode-container opencode-container-java \
   claude-code-container claude-code-container-java \
   junie-container junie-container-java \
-  copilot-container copilot-container-java
+  copilot-container copilot-container-java \
+  codex-container codex-container-java
 ```

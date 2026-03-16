@@ -1,9 +1,9 @@
-.PHONY: build build-all build-java build-base build-base-java build-opencode build-opencode-java build-claude build-claude-java build-junie build-junie-java build-copilot build-copilot-java \
-	rebuild-base rebuild-base-java rebuild-opencode rebuild-opencode-java rebuild-claude rebuild-claude-java rebuild-junie rebuild-junie-java rebuild-copilot rebuild-copilot-java
+.PHONY: build build-all build-java build-base build-base-java build-opencode build-opencode-java build-claude build-claude-java build-junie build-junie-java build-copilot build-copilot-java build-codex build-codex-java \
+	rebuild-base rebuild-base-java rebuild-opencode rebuild-opencode-java rebuild-claude rebuild-claude-java rebuild-junie rebuild-junie-java rebuild-copilot rebuild-copilot-java rebuild-codex rebuild-codex-java
 
 build: build-opencode
 
-build-all: build-opencode build-opencode-java build-claude build-claude-java build-junie build-junie-java build-copilot build-copilot-java
+build-all: build-opencode build-opencode-java build-claude build-claude-java build-junie build-junie-java build-copilot build-copilot-java build-codex build-codex-java
 
 build-java: build-opencode-java
 
@@ -82,3 +82,19 @@ build-copilot-java: build-base-java
 rebuild-copilot-java: build-base-java
 	docker build --no-cache -t copilot-container-java -f agents/copilot/java.Containerfile .
 	$(MAKE) addbin-copilot-java
+
+build-codex: build-base
+	docker build -t codex-container -f agents/codex/base.Containerfile .
+	$(MAKE) addbin-codex
+
+rebuild-codex: build-base
+	docker build --no-cache -t codex-container -f agents/codex/base.Containerfile .
+	$(MAKE) addbin-codex
+
+build-codex-java: build-base-java
+	docker build -t codex-container-java -f agents/codex/java.Containerfile .
+	$(MAKE) addbin-codex-java
+
+rebuild-codex-java: build-base-java
+	docker build --no-cache -t codex-container-java -f agents/codex/java.Containerfile .
+	$(MAKE) addbin-codex-java

@@ -3,8 +3,9 @@
 	addbin-claude addbin-claude-java \
 	addbin-junie addbin-junie-java \
 	addbin-copilot addbin-copilot-java \
+	addbin-codex addbin-codex-java \
 	render-wrappers check-generated-wrappers \
-	removebin removebin-opencode removebin-claude removebin-junie removebin-copilot ensure-local-bin
+	removebin removebin-opencode removebin-claude removebin-junie removebin-copilot removebin-codex ensure-local-bin
 
 addbin: addbin-opencode
 
@@ -21,7 +22,8 @@ check-generated-wrappers:
 addbin-opencode addbin-opencode-auth addbin-opencode-java \
 addbin-claude addbin-claude-java \
 addbin-junie addbin-junie-java \
-addbin-copilot addbin-copilot-java: render-wrappers
+addbin-copilot addbin-copilot-java \
+addbin-codex addbin-codex-java: render-wrappers
 
 addbin-opencode: ensure-local-bin
 	rm -f ~/.local/bin/opencode ~/.local/bin/opencode-auth ~/.local/bin/opencode-java ~/.local/bin/opencode-git ~/.local/bin/opencode-java-git
@@ -95,10 +97,25 @@ addbin-copilot-java: ensure-local-bin
 	cp agents/copilot/scripts/copilot-java ~/.local/bin/copilot-java
 	chmod +x ~/.local/bin/copilot-java
 
+addbin-codex: ensure-local-bin
+	rm -f ~/.local/bin/codex ~/.local/bin/codex-java ~/.local/bin/codex-git ~/.local/bin/codex-java-git
+	echo "Adding codex to ~/.local/bin/codex"
+	cp agents/codex/scripts/codex ~/.local/bin/codex
+	chmod +x ~/.local/bin/codex
+
+addbin-codex-java: ensure-local-bin
+	rm -f ~/.local/bin/codex ~/.local/bin/codex-java ~/.local/bin/codex-git ~/.local/bin/codex-java-git
+	echo "Adding codex to ~/.local/bin/codex"
+	cp agents/codex/scripts/codex ~/.local/bin/codex
+	chmod +x ~/.local/bin/codex
+	echo "Adding codex-java to ~/.local/bin/codex-java"
+	cp agents/codex/scripts/codex-java ~/.local/bin/codex-java
+	chmod +x ~/.local/bin/codex-java
+
 ensure-local-bin:
 	mkdir -p ~/.local/bin
 
-removebin: removebin-opencode removebin-claude removebin-junie removebin-copilot
+removebin: removebin-opencode removebin-claude removebin-junie removebin-copilot removebin-codex
 
 removebin-opencode:
 	rm -f ~/.local/bin/opencode
@@ -124,3 +141,9 @@ removebin-copilot:
 	rm -f ~/.local/bin/copilot-git
 	rm -f ~/.local/bin/copilot-java
 	rm -f ~/.local/bin/copilot-java-git
+
+removebin-codex:
+	rm -f ~/.local/bin/codex
+	rm -f ~/.local/bin/codex-git
+	rm -f ~/.local/bin/codex-java
+	rm -f ~/.local/bin/codex-java-git
