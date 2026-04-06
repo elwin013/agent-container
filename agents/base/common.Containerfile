@@ -7,10 +7,10 @@ RUN dnf install npm git \
     zip unzip procps ripgrep tree ImageMagick -y && \
     dnf clean all
 
-# Store globally installed npm packages under /root/.npm-global.
-ENV NPM_CONFIG_PREFIX=/root/.npm-global
+# Store globally installed npm packages under /usr/local.
+ENV NPM_CONFIG_PREFIX=/usr/local
 ENV PATH=$NPM_CONFIG_PREFIX/bin:$PATH
 
-RUN mkdir -p /root/.npm-global /root/.config /root/.local
+RUN mkdir -p /root/.config /root/.local
 
 WORKDIR /app

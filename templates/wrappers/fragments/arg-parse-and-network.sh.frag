@@ -1,6 +1,14 @@
 DOCKER_RUN_ARGS=()
 AGENT_ARGS=("$@")
 
+if [[ -n "${CONTAINER_ENGINE:-}" ]]; then
+  ENGINE_BIN="$CONTAINER_ENGINE"
+elif command -v podman >/dev/null 2>&1; then
+  ENGINE_BIN="podman"
+else
+  ENGINE_BIN="docker"
+fi
+
 if [[ "$#" -gt 0 ]]; then
   AGENT_ARGS=()
   parsing_docker_args=true
@@ -31,4 +39,4 @@ for arg in "${DOCKER_RUN_ARGS[@]}"; do
   fi
 done
 
-docker network inspect "$AGENT_NETWORK" >/dev/null 2>&1 || docker network create "$AGENT_NETWORK" >/dev/null
+"$ENGINE_BIN" network inspect "$AGENT_NETWORK" >/dev/null 2>&1 || "$ENGINE_BIN" network create "$AGENT_NETWORK" >/dev/null

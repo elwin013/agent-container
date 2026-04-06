@@ -6,7 +6,7 @@ Base runtime: Fedora 43.
 
 ## Requirements
 
-- Docker or Podman - in rootless mode
+- Docker or Podman
 - `make`
 
 ## Quick Start
@@ -108,6 +108,19 @@ Defaults:
 Persistent gitconfig paths:
 
 - `${HOME}/.config/${AGENT_NAME}/gitconfig`
+
+## Runtime User
+
+Wrappers run the agent process as the current host UID/GID so bind-mounted files keep the same host ownership.
+
+- Shared SELinux mounts use `:z` so multiple agent containers can run at once
+- Runtime mode is selected automatically:
+- Rootful Docker and rootful Podman use `--user <uid>:<gid>`
+- Rootless Podman uses `--userns=keep-id`
+- Rootless Docker falls back to container `root` so bind mounts stay writable
+- Agent config, cache, and state mounts live under a writable runtime home at `/tmp/agent-home` inside the container
+
+Set `CONTAINER_ENGINE=podman` or `CONTAINER_ENGINE=docker` to override the detected engine.
 
 ## Wrapper Generation
 

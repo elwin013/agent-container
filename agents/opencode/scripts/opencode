@@ -11,6 +11,14 @@ AGENT_NETWORK="${AGENT_NETWORK:-agentic_network}"
 DOCKER_RUN_ARGS=()
 AGENT_ARGS=("$@")
 
+if [[ -n "${CONTAINER_ENGINE:-}" ]]; then
+  ENGINE_BIN="$CONTAINER_ENGINE"
+elif command -v podman >/dev/null 2>&1; then
+  ENGINE_BIN="podman"
+else
+  ENGINE_BIN="docker"
+fi
+
 if [[ "$#" -gt 0 ]]; then
   AGENT_ARGS=()
   parsing_docker_args=true
@@ -41,14 +49,17 @@ for arg in "${DOCKER_RUN_ARGS[@]}"; do
   fi
 done
 
-docker network inspect "$AGENT_NETWORK" >/dev/null 2>&1 || docker network create "$AGENT_NETWORK" >/dev/null
+"$ENGINE_BIN" network inspect "$AGENT_NETWORK" >/dev/null 2>&1 || "$ENGINE_BIN" network create "$AGENT_NETWORK" >/dev/null
 
 M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
+AGENT_CACHE_DIR_HOST="$HOME/.cache/${AGENT_NAME}"
 AGENT_CONFIG_DIR_HOST="${HOME}/.config/${AGENT_NAME}"
+CONTAINER_HOME="/tmp/agent-home"
 
 mkdir -p "$HOME/.local/state/opencode" "$HOME/.local/share/opencode" "$AGENT_CONFIG_DIR_HOST" "$M2_CACHE_HOST"
 
 GIT_CONFIG_HOST="${AGENT_CONFIG_DIR_HOST}/gitconfig"
+mkdir -p "$AGENT_CACHE_DIR_HOST"
 mkdir -p "$(dirname "${GIT_CONFIG_HOST}")"
 touch "${GIT_CONFIG_HOST}"
 
@@ -56,17 +67,40 @@ AGENT_GIT_NAME="${AGENT_GIT_NAME:-OpenCode Agent}"
 AGENT_GIT_EMAIL="${AGENT_GIT_EMAIL:-opencode@localhost}"
 
 if [[ "$CONTAINER_IMAGE" == *-java ]]; then
-  DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:z")
+  DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:${CONTAINER_HOME}/.m2:z")
 fi
 
-exec docker run --rm --tty --interactive \
+RUNTIME_USER_ARGS=()
+
+if [[ "$ENGINE_BIN" == "podman" ]]; then
+  if [[ "$("$ENGINE_BIN" info --format '{{.Host.Security.Rootless}}' 2>/dev/null || printf false)" == "true" ]]; then
+    RUNTIME_USER_ARGS+=("--userns=keep-id")
+  else
+    RUNTIME_USER_ARGS+=("--user" "$(id -u):$(id -g)")
+  fi
+else
+  if "$ENGINE_BIN" info --format '{{range .SecurityOptions}}{{println .}}{{end}}' 2>/dev/null | grep -qx 'name=rootless'; then
+    :
+  else
+    RUNTIME_USER_ARGS+=("--user" "$(id -u):$(id -g)")
+  fi
+fi
+
+"$ENGINE_BIN" run --rm --tty --interactive \
   --name "$CONTAINER_NAME" \
   --add-host=host.docker.internal:host-gateway \
   --network "$AGENT_NETWORK" \
-  -v "$HOME/.local/state/opencode:/root/.local/state/opencode:z" \
-  -v "$HOME/.local/share/opencode:/root/.local/share/opencode:z" \
-  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:z" \
-  -e GIT_CONFIG_GLOBAL="/root/.config/${AGENT_NAME}/gitconfig" \
+  "${RUNTIME_USER_ARGS[@]}" \
+  -v "$AGENT_CACHE_DIR_HOST:${CONTAINER_HOME}/.cache:z" \
+  -v "$HOME/.local/state/opencode:${CONTAINER_HOME}/.local/state/opencode:z" \
+  -v "$HOME/.local/share/opencode:${CONTAINER_HOME}/.local/share/opencode:z" \
+  -v "$AGENT_CONFIG_DIR_HOST:${CONTAINER_HOME}/.config/${AGENT_NAME}:z" \
+  -e HOME="$CONTAINER_HOME" \
+  -e XDG_CACHE_HOME="${CONTAINER_HOME}/.cache" \
+  -e XDG_CONFIG_HOME="${CONTAINER_HOME}/.config" \
+  -e XDG_DATA_HOME="${CONTAINER_HOME}/.local/share" \
+  -e XDG_STATE_HOME="${CONTAINER_HOME}/.local/state" \
+  -e GIT_CONFIG_GLOBAL="${CONTAINER_HOME}/.config/${AGENT_NAME}/gitconfig" \
   -e AGENT_GIT_NAME="$AGENT_GIT_NAME" \
   -e AGENT_GIT_EMAIL="$AGENT_GIT_EMAIL" \
   -v "$(pwd):/app:z" \

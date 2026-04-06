@@ -95,26 +95,26 @@ git_mount_lines() {
   local agent_id="$1"
   case "${agent_id}" in
     opencode)
-      printf '%s\n' '  -v "$HOME/.local/state/opencode:/root/.local/state/opencode:z" \'
-      printf '%s\n' '  -v "$HOME/.local/share/opencode:/root/.local/share/opencode:z" \'
-      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:z" \'
+      printf '%s\n' '  -v "$HOME/.local/state/opencode:${CONTAINER_HOME}/.local/state/opencode:z" \'
+      printf '%s\n' '  -v "$HOME/.local/share/opencode:${CONTAINER_HOME}/.local/share/opencode:z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:${CONTAINER_HOME}/.config/${AGENT_NAME}:z" \'
       ;;
     claude)
-      printf '%s\n' '  -v "$HOME/.claude:/root/.claude:z" \'
-      printf '%s\n' '  -v "$HOME/.claude.json:/root/.claude.json:z" \'
-      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:z" \'
+      printf '%s\n' '  -v "$HOME/.claude:${CONTAINER_HOME}/.claude:z" \'
+      printf '%s\n' '  -v "$HOME/.claude.json:${CONTAINER_HOME}/.claude.json:z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:${CONTAINER_HOME}/.config/${AGENT_NAME}:z" \'
       ;;
     junie)
-      printf '%s\n' '  -v "$HOME/.junie:/root/.junie:z" \'
-      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:z" \'
+      printf '%s\n' '  -v "$HOME/.junie:${CONTAINER_HOME}/.junie:z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:${CONTAINER_HOME}/.config/${AGENT_NAME}:z" \'
       ;;
     copilot)
-      printf '%s\n' '  -v "$HOME/.copilot:/root/.copilot:z" \'
-      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:z" \'
+      printf '%s\n' '  -v "$HOME/.copilot:${CONTAINER_HOME}/.copilot:z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:${CONTAINER_HOME}/.config/${AGENT_NAME}:z" \'
       ;;
     codex)
-      printf '%s\n' '  -v "$HOME/.codex:/root/.codex:z" \'
-      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:/root/.config/${AGENT_NAME}:z" \'
+      printf '%s\n' '  -v "$HOME/.codex:${CONTAINER_HOME}/.codex:z" \'
+      printf '%s' '  -v "$AGENT_CONFIG_DIR_HOST:${CONTAINER_HOME}/.config/${AGENT_NAME}:z" \'
       ;;
     *)
       printf 'Unsupported agent id: %s\n' "${agent_id}" >&2

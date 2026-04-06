@@ -1,7 +1,7 @@
 FROM agent-runtime-base:fedora43
 
 # Install SDKMAN and multiple Java versions (17, 21, 25) plus Maven and Gradle.
-ENV SDKMAN_DIR=/root/.sdkman
+ENV SDKMAN_DIR=/usr/local/sdkman
 ENV PATH=$SDKMAN_DIR/candidates/java/current/bin:$SDKMAN_DIR/candidates/maven/current/bin:$SDKMAN_DIR/candidates/gradle/current/bin:$PATH
 
 RUN curl -s "https://get.sdkman.io" | bash
