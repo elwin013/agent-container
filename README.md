@@ -118,7 +118,7 @@ Wrappers run the agent process as the current host UID/GID so bind-mounted files
 - Rootful Docker and rootful Podman use `--user <uid>:<gid>`
 - Rootless Podman uses `--userns=keep-id`
 - Rootless Docker falls back to container `root` so bind mounts stay writable
-- Agent config, cache, and state mounts live under a writable runtime home at `/tmp/agent-home` inside the container
+- Agent config, cache, and state mounts live under `/home/agent` inside the container, while the wrapper starts the process in `/app`
 
 Set `CONTAINER_ENGINE=podman` or `CONTAINER_ENGINE=docker` to override the detected engine.
 
@@ -163,7 +163,7 @@ docker build --no-cache -t opencode-container -f agents/opencode/base.Containerf
 - Junie: `~/.junie`
 - Copilot: `~/.copilot`
 - Codex: `~/.codex`
-- Java wrappers: `~/.local/share/agent-container/m2` -> `/root/.m2`
+- Java wrappers: `~/.local/share/agent-container/m2` -> `/home/agent/.m2`
 
 ## Repository Layout
 

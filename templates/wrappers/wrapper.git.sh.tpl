@@ -13,7 +13,7 @@ __ARG_PARSE_AND_NETWORK_FRAGMENT__
 M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
 AGENT_CACHE_DIR_HOST="$HOME/.cache/${AGENT_NAME}"
 AGENT_CONFIG_DIR_HOST="${HOME}/.config/${AGENT_NAME}"
-CONTAINER_HOME="/tmp/agent-home"
+CONTAINER_HOME="/home/agent"
 
 __HOST_SETUP_LINES__
 

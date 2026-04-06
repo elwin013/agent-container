@@ -11,6 +11,8 @@ RUN dnf install npm git \
 ENV NPM_CONFIG_PREFIX=/usr/local
 ENV PATH=$NPM_CONFIG_PREFIX/bin:$PATH
 
-RUN mkdir -p /root/.config /root/.local
+RUN mkdir -p /root/.config /root/.local /home/agent
 
-WORKDIR /app
+ENV HOME=/home/agent
+
+WORKDIR /home/agent
