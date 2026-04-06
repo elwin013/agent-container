@@ -23,7 +23,7 @@ AGENT_GIT_NAME="${AGENT_GIT_NAME:-__AGENT_GIT_NAME_DEFAULT__}"
 AGENT_GIT_EMAIL="${AGENT_GIT_EMAIL:-__AGENT_GIT_EMAIL_DEFAULT__}"
 
 if [[ "$CONTAINER_IMAGE" == *-java ]]; then
-  DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:Z")
+  DOCKER_RUN_ARGS+=("-v" "$M2_CACHE_HOST:/root/.m2:z")
 fi
 
 exec docker run --rm --tty --interactive \
@@ -34,7 +34,7 @@ __DOCKER_MOUNT_LINES__
   -e GIT_CONFIG_GLOBAL="/root/.config/${AGENT_NAME}/gitconfig" \
   -e AGENT_GIT_NAME="$AGENT_GIT_NAME" \
   -e AGENT_GIT_EMAIL="$AGENT_GIT_EMAIL" \
-  -v "$(pwd):/app:Z" \
+  -v "$(pwd):/app:z" \
   "${DOCKER_RUN_ARGS[@]}" \
   "$CONTAINER_IMAGE" \
   bash -lc '__GIT_BOOTSTRAP_FRAGMENT__' -- "${AGENT_ARGS[@]}"
