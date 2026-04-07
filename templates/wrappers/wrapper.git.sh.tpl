@@ -30,6 +30,7 @@ if [[ "$CONTAINER_IMAGE" == *-java ]]; then
 fi
 
 RUNTIME_USER_ARGS=()
+IDENTITY_MOUNTS=()
 
 if [[ "$ENGINE_BIN" == "podman" ]]; then
   if [[ "$("$ENGINE_BIN" info --format '{{.Host.Security.Rootless}}' 2>/dev/null || printf false)" == "true" ]]; then
@@ -42,6 +43,19 @@ else
     :
   else
     RUNTIME_USER_ARGS+=("--user" "$(id -u):$(id -g)")
+
+    PASSWD_FILE="$(mktemp)"
+    GROUP_FILE="$(mktemp)"
+    trap 'rm -f "$PASSWD_FILE" "$GROUP_FILE"' EXIT
+
+    printf 'root:x:0:0:root:/root:/bin/bash\n' > "$PASSWD_FILE"
+    printf 'agent:x:%s:%s:Agent:%s:/bin/bash\n' "$(id -u)" "$(id -g)" "$CONTAINER_HOME" >> "$PASSWD_FILE"
+
+    printf 'root:x:0:\n' > "$GROUP_FILE"
+    printf 'agent:x:%s:\n' "$(id -g)" >> "$GROUP_FILE"
+
+    IDENTITY_MOUNTS+=("-v" "$PASSWD_FILE:/etc/passwd:ro,z")
+    IDENTITY_MOUNTS+=("-v" "$GROUP_FILE:/etc/group:ro,z")
   fi
 fi
 
@@ -52,6 +66,7 @@ fi
   "${RUNTIME_USER_ARGS[@]}" \
   -v "$AGENT_CACHE_DIR_HOST:${CONTAINER_HOME}/.cache:z" \
 __DOCKER_MOUNT_LINES__
+  "${IDENTITY_MOUNTS[@]}" \
   -e HOME="$CONTAINER_HOME" \
   -e XDG_CACHE_HOME="${CONTAINER_HOME}/.cache" \
   -e XDG_CONFIG_HOME="${CONTAINER_HOME}/.config" \
