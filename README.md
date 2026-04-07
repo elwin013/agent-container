@@ -17,6 +17,21 @@ make build-all
 
 This builds all images and installs wrapper scripts into `~/.local/bin`.
 
+## Running new version (after 06/04/2026) when you have the older version
+
+If you previously ran an agent as `root` and later switch to the non-root wrapper mode, repair ownership on mounted host paths before starting the agent again:
+
+```sh
+sudo chown -R "$USER:$(id -gn)" \
+  ~/.config/opencode ~/.local/state/opencode ~/.local/share/opencode \
+  ~/.config/claude ~/.claude ~/.claude.json \
+  ~/.junie \
+  ~/.copilot \
+  ~/.codex ~/.config/codex \
+  ~/.cache/opencode ~/.cache/claude ~/.cache/junie ~/.cache/copilot ~/.cache/codex \
+  ~/.local/share/agent-container/m2
+```
+
 Also available:
 
 - `make build-opencode`, `make build-opencode-java`
