@@ -101,7 +101,7 @@ else
   fi
 fi
 
-"$ENGINE_BIN" run --rm --tty --interactive \
+"$ENGINE_BIN" run --rm --tty --interactive --init \
   --name "$CONTAINER_NAME" \
   --add-host=host.docker.internal:host-gateway \
   --network "$AGENT_NETWORK" \
