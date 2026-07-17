@@ -1,6 +1,6 @@
 # agent-container
 
-Run coding agents in containers against the current project directory (`$(pwd)` mounted to `/app`) so agents do not get full host filesystem access.
+Run coding agents in containers against the current project directory. The canonical host project path is reused inside the container so agent sessions, memories, permissions, and other path-scoped state stay separated between projects. Only the project directory is mounted, so agents do not get access to the rest of the host filesystem.
 
 Base runtime: Fedora 43.
 
@@ -88,6 +88,7 @@ claude --cpus 2 -- --help
 junie -e BAR=baz -- --help
 ```
 
+
 Without `--`, arguments are forwarded to the agent CLI.
 
 ## Container Network
@@ -103,7 +104,7 @@ All wrappers attach containers to a shared Docker network named `agentic_network
 All wrappers configure git inside the container:
 
 - set user name/email
-- set `/app` as `safe.directory`
+- set the mounted project path as `safe.directory`
 - disable commit/tag GPG signing
 
 Defaults:
@@ -133,7 +134,9 @@ Wrappers run the agent process as the current host UID/GID so bind-mounted files
 - Rootful Docker and rootful Podman use `--user <uid>:<gid>`
 - Rootless Podman uses `--userns=keep-id`
 - Rootless Docker falls back to container `root` so bind mounts stay writable
-- Agent config, cache, and state mounts live under `/home/agent` inside the container, while the wrapper starts the process in `/app`
+- Agent config, cache, and state mounts live under `/home/agent` inside the container
+- The wrapper starts the agent in the canonical host project path (for example, host `/home/alice/src/api` is also `/home/alice/src/api` in the container)
+- If the host project is a reserved top-level container path, the wrapper safely falls back to the same path below `/workspace`
 
 Set `CONTAINER_ENGINE=podman` or `CONTAINER_ENGINE=docker` to override the detected engine.
 

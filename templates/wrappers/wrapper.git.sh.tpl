@@ -14,6 +14,17 @@ M2_CACHE_HOST="$HOME/.local/share/agent-container/m2"
 AGENT_CACHE_DIR_HOST="$HOME/.cache/${AGENT_NAME}"
 AGENT_CONFIG_DIR_HOST="${HOME}/.config/${AGENT_NAME}"
 CONTAINER_HOME="/home/agent"
+PROJECT_DIR="$(pwd -P)"
+CONTAINER_PROJECT_DIR="$PROJECT_DIR"
+
+# Preserve the host project path so agents that key state by their working
+# directory keep unrelated projects separate. Avoid masking container runtime
+# paths when the wrapper is invoked from an unusual top-level directory.
+case "$PROJECT_DIR" in
+  /|/bin|/boot|/dev|/etc|/home|/lib|/lib64|/proc|/root|/run|/sbin|/sys|/tmp|/usr|/var|"$CONTAINER_HOME")
+    CONTAINER_PROJECT_DIR="/workspace${PROJECT_DIR}"
+    ;;
+esac
 
 __HOST_SETUP_LINES__
 
@@ -59,6 +70,7 @@ else
   fi
 fi
 
+
 "$ENGINE_BIN" run --rm --tty --interactive --init \
   --name "$CONTAINER_NAME" \
   --add-host=host.docker.internal:host-gateway \
@@ -75,7 +87,7 @@ __DOCKER_MOUNT_LINES__
   -e GIT_CONFIG_GLOBAL="${CONTAINER_HOME}/.config/${AGENT_NAME}/gitconfig" \
   -e AGENT_GIT_NAME="$AGENT_GIT_NAME" \
   -e AGENT_GIT_EMAIL="$AGENT_GIT_EMAIL" \
-  -v "$(pwd):/app:z" \
+  -v "$PROJECT_DIR:$CONTAINER_PROJECT_DIR:z" \
   "${DOCKER_RUN_ARGS[@]}" \
   "$CONTAINER_IMAGE" \
-  bash -lc '__GIT_BOOTSTRAP_FRAGMENT__' -- "${AGENT_ARGS[@]}"
+  bash -lc '__GIT_BOOTSTRAP_FRAGMENT__' -- "$CONTAINER_PROJECT_DIR" "${AGENT_ARGS[@]}"
