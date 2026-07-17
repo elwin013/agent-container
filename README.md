@@ -17,6 +17,13 @@ make build-all
 
 This builds all images and installs wrapper scripts into `~/.local/bin`.
 
+## Notes on project paths (after 17/07/2026)
+
+The wrappers no longer force every project to appear inside the container as `/app`. They now preserve the canonical host project path inside the container so path-scoped agent state stays separated between unrelated projects. If the host project path would collide with a reserved container top-level path, the wrapper remaps it under `/workspace` instead.
+
+This change fixes the old behavior where different projects could be merged under the same OpenCode path and share history unexpectedly.
+
+
 ## Running new version (after 06/04/2026) when you have the older version
 
 If you previously ran an agent as `root` and later switch to the non-root wrapper mode, repair ownership on mounted host paths before starting the agent again:
